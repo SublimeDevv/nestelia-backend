@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
   web:
@@ -9,9 +9,9 @@ services:
     restart: unless-stopped
     ports:
       - "7044:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
       - Jwt__Key=${JWT_KEY}
       - Jwt__Issuer=${JWT_ISSUER}
