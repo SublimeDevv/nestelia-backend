@@ -1,0 +1,6 @@
+@Nestelia_HostAddress = http://localhost:5274
+
+GET {{Nestelia_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
