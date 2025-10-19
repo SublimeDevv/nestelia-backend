@@ -12,20 +12,17 @@ builder.Services.AddApplication(builder.Configuration);
 
 var app = builder.Build();
 
-app.UseWebSockets(); 
+app.UseWebSockets();
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Nestelia API v1");
-    });
-}
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Nestelia API v1");
+});
 
 app.UseHttpsRedirection();
 
-app.UseCors("VueFrontend");
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 

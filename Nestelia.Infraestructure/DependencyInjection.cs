@@ -9,8 +9,10 @@ using Nestelia.Domain.Entities;
 using Nestelia.Infraestructure.Common;
 using Nestelia.Infraestructure.Interfaces.AuditLogs;
 using Nestelia.Infraestructure.Interfaces.Auth;
+using Nestelia.Infraestructure.Interfaces.Bot;
 using Nestelia.Infraestructure.Repositories.AuditLogs;
 using Nestelia.Infraestructure.Repositories.Auth;
+using Nestelia.Infraestructure.Repositories.Bot;
 
 namespace Nestelia.Infraestructure;
 
@@ -85,5 +87,8 @@ public static class DependencyInjection
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<ITokenRepository, TokenRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IBotRepository, BotRepository>();
+        services.AddSingleton<IPdfProcessor, PdfProcessor>();
+
     }
 }

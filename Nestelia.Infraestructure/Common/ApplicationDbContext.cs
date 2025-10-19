@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Nestelia.Domain.Entities;
 using Nestelia.Domain.Entities.Audit;
 using Nestelia.Domain.Entities.Auth;
+using Nestelia.Domain.Entities.Bot;
 
 namespace Nestelia.Infraestructure.Common
 {
@@ -16,7 +17,8 @@ namespace Nestelia.Infraestructure.Common
         public DbSet<ApplicationUser> AppUsers { get; set; }        
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
-        
+        public DbSet<Configuration> BotConfigurations { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             

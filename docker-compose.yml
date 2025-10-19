@@ -16,6 +16,8 @@ services:
       - Jwt__Key=${JWT_KEY}
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
+      - Ollama__BaseUrl=${OLLAMA_BASE_URL}
+      - ChromaDB__BaseUrl=${CHROMADB_BASE_URL}
       - AllowedHosts=*
     env_file:
       - .env

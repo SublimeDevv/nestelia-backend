@@ -27,15 +27,15 @@ namespace Nestelia.WebAPI
             services.AddSingleton(mapper);
 
             services.AddRouting(options => options.LowercaseUrls = true);
-
             services.AddCors(options =>
             {
-                options.AddPolicy("VueFrontend", policy =>
+                options.AddPolicy("AllowAll", policy =>
                 {
-                    policy.WithOrigins("https://localhost:5173", "https://sgp-productivo.vercel.app", "https://*.vercel.app")
+                    policy.SetIsOriginAllowed(origin => true) 
                           .AllowAnyHeader()
                           .AllowAnyMethod()
-                          .AllowCredentials(); 
+                          .WithExposedHeaders("Content-Type", "Cache-Control", "Connection")
+                          .AllowCredentials();
                 });
             });
 
