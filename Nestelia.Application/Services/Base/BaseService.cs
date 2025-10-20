@@ -2,11 +2,11 @@
 using Nestelia.Domain.DTO;
 using System.Linq.Expressions;
 using Nestelia.Domain.Common.ViewModels.Util;
-using Nestelia.Infraestructure.Repositories.Generic;
 using Nestelia.Application.Extensions;
 using Serilog;
 using Nestelia.Application.Interfaces.Base;
 using System.Text.Json;
+using Nestelia.Infraestructure.Interfaces.Generic;
 
 namespace Nestelia.Application.Services.Base
 {

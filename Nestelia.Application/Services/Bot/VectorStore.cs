@@ -39,7 +39,7 @@ namespace Nestelia.Application.Services.Bot
             if (!_chunks.Any())
             {
                 _logger.LogWarning("No hay chunks en el store");
-                return new List<RelevantChunk>();
+                return [];
             }
 
             var queryEmbedding = await ollamaService.GenerateEmbeddingAsync(query);

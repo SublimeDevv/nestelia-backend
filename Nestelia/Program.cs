@@ -8,7 +8,7 @@ builder.Services.AddPresentation(builder.Configuration);
 
 builder.Services.AddInfrastructure(builder.Configuration);
 
-builder.Services.AddApplication(builder.Configuration);
+builder.Services.AddApplication();
 
 var app = builder.Build();
 

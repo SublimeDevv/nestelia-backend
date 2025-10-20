@@ -19,7 +19,7 @@ public static class DependencyInjection
     /// Adds the configuration for the area that depends from the application project.
     /// </summary>
     /// <param name="services">Application Section</param>
-    public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IAuditLogService, AuditLogService>();
@@ -31,8 +31,8 @@ public static class DependencyInjection
         services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
         services.AddTransient(s =>
         {
-            IHttpContextAccessor contextAccessor = s.GetService<IHttpContextAccessor>();
-            ClaimsPrincipal user = contextAccessor?.HttpContext?.User;
+            IHttpContextAccessor? contextAccessor = s.GetService<IHttpContextAccessor>();
+            ClaimsPrincipal? user = contextAccessor?.HttpContext?.User;
             return user ?? throw new Exception("User not resolved");
         });
 

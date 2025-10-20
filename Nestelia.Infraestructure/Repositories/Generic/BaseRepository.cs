@@ -11,12 +11,9 @@ namespace Nestelia.Infraestructure.Repositories.Generic
 {
     public class BaseRepository<T> where T : class
     {
-        /// <summary>
-        /// The context
-        /// </summary>
         protected readonly ApplicationDbContext Context;
-        private readonly ClaimsPrincipal _user;
-        private string tableName;
+        private readonly ClaimsPrincipal _user = null!;
+        private readonly string tableName = string.Empty;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseRepository{T}"/> class.
@@ -33,12 +30,13 @@ namespace Nestelia.Infraestructure.Repositories.Generic
             {
                 var entityTypeOfFooBar = entityTypes.First(t => t.ClrType == typeof(T));
                 var tableNameAnnotation = entityTypeOfFooBar.GetAnnotation("Relational:TableName");
-                var tableNameOfFooBarSet = tableNameAnnotation.Value.ToString();
+                var tableNameOfFooBarSet = tableNameAnnotation?.Value?.ToString();
+                if (tableNameOfFooBarSet is null) return;
                 tableName = tableNameOfFooBarSet;
             }
             catch (Exception ex)
             {
-                //Una entidad que hereda de base entity que no tiene tabla
+                ex.ToString();
             }
             _user = user;
 
@@ -60,9 +58,11 @@ namespace Nestelia.Infraestructure.Repositories.Generic
             Context.Set<T>().Add(entity);
             await Context.SaveChangesAsync();
 
-            var idRow = (Guid)typeof(T).GetProperty("Id")?.GetValue(entity);
-
-            AuditChanges audit = new AuditChanges()
+            var idProperty = typeof(T).GetProperty("Id");
+            var idValue = idProperty?.GetValue(entity);
+            if (idValue is not Guid idRow)
+                throw new InvalidOperationException("La propiedad 'Id' es nula o no es de tipo Guid.");
+            AuditChanges audit = new()
             {
                 Id = Guid.NewGuid(),
                 Action = "INSERT",
@@ -75,7 +75,9 @@ namespace Nestelia.Infraestructure.Repositories.Generic
                 RowVersion = DateTime.Now,
                 IsDeleted = false,
                 IdEntity = idRow,
-                CreatedAt = createdAtProperty != null ? (DateTime)createdAtProperty.GetValue(entity) : DateTime.Now
+                CreatedAt = createdAtProperty != null && createdAtProperty.GetValue(entity) != null
+                    ? (DateTime)createdAtProperty.GetValue(entity)!
+                    : DateTime.Now
             };
 
             await AuditTable(audit);
@@ -97,8 +99,10 @@ namespace Nestelia.Infraestructure.Repositories.Generic
 
             if (result != 0)
             {
-                var idRow = (Guid)typeof(T).GetProperty("Id")?.GetValue(entity);
-                AuditChanges audit = new AuditChanges()
+                var idValue = typeof(T).GetProperty("Id")?.GetValue(entity);
+                if (idValue is not Guid idRow)
+                    throw new InvalidOperationException("La propiedad 'Id' es nula o no es de tipo Guid.");
+                AuditChanges audit = new()
                 {
                     Id = Guid.NewGuid(),
                     Action = "UPDATE",
@@ -141,6 +145,10 @@ namespace Nestelia.Infraestructure.Repositories.Generic
 
             if (result != 0)
             {
+                var idProperty = entity.GetType().GetProperty("Id");
+                var idValue = idProperty?.GetValue(entity);
+                Guid idEntity = idValue is Guid guid ? guid : Guid.Empty;
+
                 AuditChanges audit = new()
                 {
                     Id = Guid.NewGuid(),
@@ -153,7 +161,7 @@ namespace Nestelia.Infraestructure.Repositories.Generic
                     IPAddress = "",
                     RowVersion = DateTime.Now,
                     IsDeleted = false,
-                    IdEntity = (Guid)entity.GetType().GetProperty("Id").GetValue(entity),
+                    IdEntity = idEntity,
                     CreatedAt = DateTime.Now
                 };
 
@@ -255,65 +263,23 @@ namespace Nestelia.Infraestructure.Repositories.Generic
 
             return await query.FirstOrDefaultAsync();
         }
-        
-        public virtual async Task<T?> GetSingleWithRelationsAsync(
-            Expression<Func<T, bool>>? filter = null,
-            params Expression<Func<T, object>>[] includes)
-        {
-            var query = Context.Set<T>().AsQueryable();
-
-            if (includes.Length > 0)
-            {
-                foreach (var include in includes)
-                {
-                    query = query.Include(include);
-                }
-            }
-            else
-            {
-                var navigations = Context.Model.FindEntityType(typeof(T))?
-                    .GetNavigations()
-                    .Select(n => n.Name)
-                    .ToList();
-
-                if (navigations != null)
-                {
-                    foreach (var navigation in navigations)
-                    {
-                        query = query.Include(navigation);
-                    }
-                }
-            }
-            
-            if (typeof(T).GetProperty("IsDeleted") != null)
-            {
-                query = query.Where(e => EF.Property<bool>(e, "IsDeleted") == false);
-            }
-
-            if (filter != null)
-            {
-                query = query.Where(filter);
-            } ;
-
-            return query.FirstOrDefault();
-        }
 
         public string GetIdUser()
         {
-            if (this._user == null || !this._user.Identity.IsAuthenticated)
+            if (this._user == null || this._user.Identity == null || !this._user.Identity.IsAuthenticated)
             {
                 return string.Empty;
             }
-            return this._user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value;
+            return this._user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
         }
 
         public string GetRol()
         {
-            if (this._user == null || !this._user.Identity.IsAuthenticated)
+            if (this._user == null || this._user.Identity == null || !this._user.Identity.IsAuthenticated)
             {
                 return string.Empty;
             }
-            return this._user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role).Value;
+            return this._user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role)?.Value ?? string.Empty;
         }
 
         public async Task<int> AuditTable(AuditChanges audit)
@@ -350,37 +316,39 @@ namespace Nestelia.Infraestructure.Repositories.Generic
             return result.FirstOrDefault();
         }
 
-        public async Task<int> AuditTable(AuditChanges audit, IDbTransaction transaction = null)
+        public async Task<int> AuditTable(AuditChanges audit, IDbTransaction? transaction = null)
         {
             var sql = @"INSERT INTO [dbo].[Tbl_AuditChanges]
-                                   ([Id]
-                                   ,[TableName]
-                                   ,[OldValue]
-                                   ,[NewValue]
-                                   ,[User]
-                                   ,[Role]
-                                   ,[IPAddress]
-                                   ,[RowVersion]
-                                   ,[IsDeleted]
-                                   ,[IdEntity]
-                                   ,[Action]
-                                   ,[CreatedAt])
-                             VALUES
-                                   (@Id
-                                   ,@TableName
-                                   ,@OldValue
-                                   ,@NewValue
-                                   ,@User
-                                   ,@Role
-                                   ,@IPAddress
-                                   ,@RowVersion
-                                   ,@IsDeleted
-                                   ,@IdEntity
-                                   ,@Action
-                                   ,@CreatedAt)";
+                                       ([Id]
+                                       ,[TableName]
+                                       ,[OldValue]
+                                       ,[NewValue]
+                                       ,[User]
+                                       ,[Role]
+                                       ,[IPAddress]
+                                       ,[RowVersion]
+                                       ,[IsDeleted]
+                                       ,[IdEntity]
+                                       ,[Action]
+                                       ,[CreatedAt])
+                                 VALUES
+                                       (@Id
+                                       ,@TableName
+                                       ,@OldValue
+                                       ,@NewValue
+                                       ,@User
+                                       ,@Role
+                                       ,@IPAddress
+                                       ,@RowVersion
+                                       ,@IsDeleted
+                                       ,@IdEntity
+                                       ,@Action
+                                       ,@CreatedAt)";
+
+            if (transaction == null || transaction.Connection == null)
+                throw new ArgumentNullException(nameof(transaction), "La transacción o su conexión es nula.");
 
             return await transaction.Connection.ExecuteAsync(sql, audit, transaction);
-
         }
 
 

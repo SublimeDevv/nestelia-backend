@@ -48,9 +48,14 @@ namespace Nestelia.Infraestructure.Repositories.Auth
             refreshToken.Used = true;
 
             var user = await _context.Users.FindAsync(refreshToken.UserId) ?? throw new ForbiddenAccessException();
+
             var getUserRole = await _userManager.GetRolesAsync(user);
 
-            UserSession userSession = new(user.Id, user.Email, getUserRole.First());
+            UserSession userSession = new(
+                user.Id,
+                user.Email ?? string.Empty,
+                getUserRole.First()
+            );
 
             var generateTokens = await _tokenRepository.GenerateTokens(user, userSession);
 

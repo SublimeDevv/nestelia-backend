@@ -1,14 +1,15 @@
-﻿using System.Text.Json;
-
-public class LogEntry
+﻿namespace Nestelia.Domain.Common.Util
 {
-    public string Message { get; set; }
-    public int HttpMethod { get; set; }
-    public string Endpoint { get; set; }
-    public int Level { get; set; }
-    public string UserId { get; set; }
-    public DateTime TimeStamp { get; set; }
-    public string Id { get; set; }
-    public bool IsDeleted { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public class LogEntry
+    {
+        public required string Message { get; set; }
+        public int HttpMethod { get; set; }
+        public required string Endpoint { get; set; }
+        public int Level { get; set; }
+        public required string UserId { get; set; }
+        public DateTime TimeStamp { get; set; }
+        public required string Id { get; set; }
+        public bool IsDeleted { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
 }

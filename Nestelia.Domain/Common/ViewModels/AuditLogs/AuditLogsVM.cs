@@ -4,6 +4,6 @@ namespace Nestelia.Domain.Common.ViewModels.AuditLogs
 {
     public class AuditLogsVM: AuditLogDto
     {
-        public string UserEmail { get; set; }
+        public required string UserEmail { get; set; }
     }
 }

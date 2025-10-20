@@ -23,6 +23,7 @@
     {
         public string? Question { get; set; }
         public int MaxResults { get; set; } = 3;
+        public bool UseModelVps { get; set; }
     }
 
     public class QueryResponse

@@ -1,8 +1,7 @@
-﻿
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 
-namespace Nestelia.Infraestructure.Repositories.Generic
+namespace Nestelia.Infraestructure.Interfaces.Generic
 {
     /// <summary>
     /// 
@@ -47,9 +46,6 @@ namespace Nestelia.Infraestructure.Repositories.Generic
         /// <returns></returns>
         Task<T?> GetSingleAsync(Expression<Func<T, bool>>? filter = null);
         
-        Task<T?> GetSingleWithRelationsAsync(Expression<Func<T, bool>>? filter = null,
-            params Expression<Func<T, object>>[] includes);
-
         string GetIdUser();
         string GetRol();
 

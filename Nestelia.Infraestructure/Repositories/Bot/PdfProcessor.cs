@@ -32,9 +32,7 @@ namespace Nestelia.Infraestructure.Repositories.Bot
 
         private List<DocumentChunk> CreateChunks(string text, int maxChunkSize, string docId, string fileName)
         {
-            // ✅ REDUCIR TAMAÑO MÁXIMO DE CHUNKS
-            const int SAFE_CHUNK_SIZE = 400; // Cambiar de 600 a 400
-            const int OVERLAP = 50;          // Overlap entre chunks
+            const int SAFE_CHUNK_SIZE = 400; 
 
             var chunks = new List<DocumentChunk>();
             var sentences = text.Split(new[] { ". ", ".\n", "? ", "! " },
@@ -50,10 +48,8 @@ namespace Nestelia.Infraestructure.Repositories.Bot
 
                 var sentenceWithPeriod = sentence.Trim() + ". ";
 
-                // Si agregar la oración excede el límite
                 if ((currentChunk + sentenceWithPeriod).Length > SAFE_CHUNK_SIZE)
                 {
-                    // Guardar chunk actual si no está vacío
                     if (!string.IsNullOrWhiteSpace(currentChunk))
                     {
                         chunks.Add(new DocumentChunk
@@ -65,7 +61,6 @@ namespace Nestelia.Infraestructure.Repositories.Bot
                         });
                     }
 
-                    // Crear nuevo chunk con overlap (últimas 2 oraciones)
                     var overlapText = string.Join("", previousSentences.TakeLast(2));
                     currentChunk = overlapText + sentenceWithPeriod;
                     previousSentences.Clear();
@@ -75,13 +70,11 @@ namespace Nestelia.Infraestructure.Repositories.Bot
                     currentChunk += sentenceWithPeriod;
                 }
 
-                // Mantener últimas oraciones para overlap
                 previousSentences.Add(sentenceWithPeriod);
                 if (previousSentences.Count > 3)
                     previousSentences.RemoveAt(0);
             }
 
-            // Agregar último chunk
             if (!string.IsNullOrWhiteSpace(currentChunk))
             {
                 chunks.Add(new DocumentChunk

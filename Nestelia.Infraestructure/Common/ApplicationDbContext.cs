@@ -7,13 +7,8 @@ using Nestelia.Domain.Entities.Bot;
 
 namespace Nestelia.Infraestructure.Common
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-        {
-
-        }
-
         public DbSet<ApplicationUser> AppUsers { get; set; }        
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }

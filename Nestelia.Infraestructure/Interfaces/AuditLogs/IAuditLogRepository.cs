@@ -1,6 +1,6 @@
 ﻿using Nestelia.Domain.Common.ViewModels.AuditLogs;
 using Nestelia.Domain.Entities.Audit;
-using Nestelia.Infraestructure.Repositories.Generic;
+using Nestelia.Infraestructure.Interfaces.Generic;
 
 namespace Nestelia.Infraestructure.Interfaces.AuditLogs
 {

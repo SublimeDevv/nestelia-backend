@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Nestelia.Application.Interfaces.Bot;
+using Nestelia.Domain.DTO.Bot;
 using Nestelia.Domain.Entities.Bot;
 using Nestelia.Infraestructure.Interfaces.Bot;
 using System.Diagnostics;
@@ -10,7 +11,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BotController(IBotService botService, IPdfProcessor pdfProcessor, IVectorStore vectorStore, IOllamaService ollamaService, IChromaDbService chromaDbService) : ControllerBase
+    public class BotController(IPdfProcessor pdfProcessor, IVectorStore vectorStore, IOllamaService ollamaService, IChromaDbService chromaDbService, IBotService botService) : ControllerBase
     {
         private readonly IBotService _botService = botService;
         private readonly IPdfProcessor _pdfProcessor = pdfProcessor;
@@ -26,7 +27,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
             return Ok(new
             {
                 status = "running",
-                ollamaAvailable = ollamaAvailable,
+                ollamaAvailable,
                 chunksInStore = _vectorStore.GetChunkCount(),
                 message = ollamaAvailable
                     ? "Sistema listo"
@@ -95,7 +96,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
                     request.MaxResults,
                     _ollamaService);
 
-                if (!relevantChunks.Any())
+                if (relevantChunks.Count == 0)
                 {
                     return NotFound(new
                     {
@@ -108,7 +109,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
                     relevantChunks.Select((c, i) =>
                         $"[Fragmento {i + 1} de {c.FileName}]\n{c.Content}"));
 
-                var prompt = $@"Eres un asistente experto que responde preguntas basándose en documentos.
+                var prompt = $@"Eres un asistente experto que responde preguntas.
                             CONTEXTO:
                             {context}
 
@@ -116,13 +117,13 @@ namespace Nestelia.WebAPI.Controllers.Bot
 
                             INSTRUCCIONES:
                             - Responde SOLO con información del contexto
-                            - Si no sabes algo, dilo claramente
+                            - Si no sabes algo, solo di que no lo sabes
                             - Sé conciso y preciso
                             - Responde en español
 
                             RESPUESTA:";
 
-                var answer = await _ollamaService.GenerateResponseAsync(prompt);
+                var answer = await _ollamaService.GenerateResponseAsync(prompt, request.UseModelVps);
 
                 sw.Stop();
 
@@ -149,18 +150,21 @@ namespace Nestelia.WebAPI.Controllers.Bot
                 return;
             }
 
-            var ollamaAvailable = await _ollamaService.IsAvailableAsync();
-            if (!ollamaAvailable)
+            if (!request.UseModelVps)
             {
-                Response.StatusCode = 503;
-                await Response.WriteAsync("Ollama no disponible");
-                return;
+                var ollamaAvailable = await _ollamaService.IsAvailableAsync();
+                if (!ollamaAvailable)
+                {
+                    Response.StatusCode = 503;
+                    await Response.WriteAsync("Ollama no disponible");
+                    return;
+                }
             }
 
-            Response.Headers["Content-Type"] = "text/event-stream";
-            Response.Headers["Cache-Control"] = "no-cache";
-            Response.Headers["Connection"] = "keep-alive";
-            Response.Headers["X-Accel-Buffering"] = "no"; 
+            Response.Headers.ContentType = "text/event-stream";
+            Response.Headers.CacheControl = "no-cache";
+            Response.Headers.Connection = "keep-alive";
+            Response.Headers["X-Accel-Buffering"] = "no";
 
             try
             {
@@ -171,7 +175,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
                     request.MaxResults,
                     _ollamaService);
 
-                if (!relevantChunks.Any())
+                if (relevantChunks.Count == 0)
                 {
                     await WriteSSEAsync("error", new
                     {
@@ -187,11 +191,11 @@ namespace Nestelia.WebAPI.Controllers.Bot
                     {
                         fileName = c.FileName,
                         content = c.Content?.Length > 200
-                            ? c.Content.Substring(0, 200) + "..."
+                            ? string.Concat(c.Content.AsSpan(0, 200), "...")
                             : c.Content,
                         distance = c.Distance
                     }),
-                    count = relevantChunks.Count()
+                    count = relevantChunks.Count
                 });
 
                 var context = string.Join("\n\n---\n\n",
@@ -199,19 +203,24 @@ namespace Nestelia.WebAPI.Controllers.Bot
                         $"[Fragmento {i + 1} de {c.FileName}]\n{c.Content}"));
 
                 var prompt = $@"Eres un asistente experto que responde preguntas basándose en documentos.
-                    CONTEXTO:
-                    {context}
-                    PREGUNTA: {request.Question}
-                    INSTRUCCIONES:
-                    - Responde SOLO con información del contexto
-                    - Si no sabes algo, dilo claramente
-                    - Sé conciso y preciso
-                    - Responde en español
-                    RESPUESTA:";
+                        CONTEXTO:
+                        {context}
+
+                        PREGUNTA: {request.Question}
+
+                        INSTRUCCIONES:
+                        - Responde SOLO con información del contexto
+                        - Si no sabes algo, dilo claramente
+                        - Sé conciso y preciso
+                        - Responde en español
+
+                        RESPUESTA:";
 
                 await WriteSSEAsync("start", new { timestamp = DateTime.UtcNow });
 
-                await foreach (var token in _ollamaService.GenerateResponseStreamAsync(prompt))
+                var reponses = _ollamaService.GenerateResponseStreamAsync(prompt, request.UseModelVps);
+
+                await foreach (var token in reponses)
                 {
                     await WriteSSEAsync("token", new { content = token });
                 }
@@ -221,9 +230,10 @@ namespace Nestelia.WebAPI.Controllers.Bot
                 await WriteSSEAsync("done", new
                 {
                     processingTimeMs = sw.Elapsed.TotalMilliseconds,
-                    chunkCount = relevantChunks.Count(),
+                    chunkCount = relevantChunks.Count,
                     timestamp = DateTime.UtcNow
                 });
+
             }
             catch (Exception ex)
             {
@@ -232,6 +242,9 @@ namespace Nestelia.WebAPI.Controllers.Bot
                     message = "Error generando respuesta",
                     details = ex.Message
                 });
+            } finally
+            {
+                await Response.CompleteAsync();
             }
         }
 
@@ -240,12 +253,11 @@ namespace Nestelia.WebAPI.Controllers.Bot
             var json = JsonSerializer.Serialize(data);
             var message = $"event: {eventType}\ndata: {json}\n\n";
             var bytes = Encoding.UTF8.GetBytes(message);
-
-            await Response.Body.WriteAsync(bytes, 0, bytes.Length);
+            await Response.Body.WriteAsync(bytes);
             await Response.Body.FlushAsync();
         }
 
-        [HttpDelete("clear")]
+        [HttpDelete("clear-chromadb")]
         public async Task<IActionResult> ClearDatabase()
         {
             try
@@ -264,6 +276,46 @@ namespace Nestelia.WebAPI.Controllers.Bot
             }
         }
 
+        [HttpPost("createApiKey")]
+        public async Task<IActionResult> CreateApiKey([FromBody] BotDto botDto)
+        {
+            var result = await _botService.CreateApiKey(botDto);
+            if (!result.IsSuccess) return BadRequest(result.Error.Message);
+
+            return Ok(result);
+        }
+
+        [HttpPut("updateApiKey")]
+        public async Task<IActionResult> UpdateApiKey([FromBody] BotDto botDto)
+        {
+            var result = await _botService.UpdateApiKey(botDto);
+            if (!result.IsSuccess) return BadRequest(result.Error.Message);
+            return Ok(result);
+        }
+
+        [HttpGet("getModelName")]
+        public async Task<IActionResult> GetModelName()
+        {
+            var result = await _botService.GetModelName();
+            if (!result.IsSuccess) return BadRequest(result.Error.Message);
+            return Ok(result);
+        }
+
+        [HttpPost("createModelName")]
+        public async Task<IActionResult> CreateModelName([FromBody] BotDto botDto)
+        {
+            var result = await _botService.CreateModelName(botDto);
+            if (!result.IsSuccess) return BadRequest(result.Error.Message);
+            return Ok(result);
+        }
+
+        [HttpPut("updateModelName")]
+        public async Task<IActionResult> UpdateModelName([FromBody] BotDto botDto)
+        {
+            var result = await _botService.UpdateModelName(botDto);
+            if (!result.IsSuccess) return BadRequest(result.Error.Message);
+            return Ok(result);
+        }
 
     }
 }

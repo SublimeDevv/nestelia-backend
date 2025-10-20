@@ -12,7 +12,7 @@ namespace Nestelia.WebAPI.Controllers.AuditLogs
     {
         private readonly IAuditLogService _service = service;
 
-        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };

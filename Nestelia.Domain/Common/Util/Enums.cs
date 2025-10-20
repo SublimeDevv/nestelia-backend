@@ -8,7 +8,6 @@
             MASCULINO,
             FEMENINO,
             OTRO
-            
         }
         
         public enum Roles
