@@ -1,6 +1,5 @@
-﻿
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Nestelia.Application.Interfaces.Base;
 using Nestelia.Domain.DTO;
 using Nestelia.Domain.Entities;
@@ -12,35 +11,37 @@ namespace Nestelia.WebAPI.Controllers.Base
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TDto">The type of the dto.</typeparam>
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="BaseController{T, TDto}"/> class.
+    /// </remarks>
+    /// <param name="service">The service.</param>
     [ApiController]
     [Route("api/[controller]")]
-    public class BaseController<T, TDto> : ControllerBase where T : BaseEntity where TDto : BaseDto
+    public class BaseController<T, TDto>(IServiceBase<T, TDto> service) : ControllerBase where T : BaseEntity where TDto : BaseDto
     {
         /// <summary>
         /// The service
         /// </summary>
-        private readonly IServiceBase<T, TDto> _service;
+        private readonly IServiceBase<T, TDto> _service = service;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BaseController{T, TDto}"/> class.
-        /// </summary>
-        /// <param name="service">The service.</param>
-        public BaseController(IServiceBase<T, TDto> service)
+        protected async Task InvalidateCache()
         {
-            _service = service;
+            var cache = HttpContext.RequestServices.GetRequiredService<IOutputCacheStore>();
+            await cache.EvictByTagAsync("entity", default);
         }
-
         /// <summary>
         /// Gets all.
         /// </summary>
         /// <returns></returns>
-
         [HttpGet]
-        [Authorize]
-        public virtual async Task<ActionResult<List<TDto>>> GetAll()
+        [OutputCache(PolicyName = "EntityVaryByQuery")]
+        public virtual async Task<ActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int size = 10)
         {
-            var result = await _service.GetAllAsync();
-
+            var result = await _service.GetAllAsync(page, size);
+            if (result.IsFailure)
+            {
+                return NotFound(result);
+            }
             return Ok(result);
         }
 
@@ -49,14 +50,14 @@ namespace Nestelia.WebAPI.Controllers.Base
         /// </summary>
         /// <param name="id">The identifier.</param>
         /// <returns></returns>
-
         [HttpGet("{id}")]
+        [OutputCache(PolicyName = "EntityCache")]
         public virtual async Task<ActionResult<T>> GetById(Guid id)
         {
             var result = await _service.GetById(x => x.Id == id);
-            if (result.Data == null)
+            if (result.IsFailure)
             {
-                return NotFound();
+                return NotFound(result);
             }
 
             return Ok(result);
@@ -70,10 +71,15 @@ namespace Nestelia.WebAPI.Controllers.Base
         [HttpPost]
         public virtual async Task<ActionResult<TDto>> Create(TDto dto)
         {
-
-
             var entity = await _service.ConvertToEntity(dto);
             var createdEntity = await _service.InsertAsync(entity);
+
+            if (createdEntity.IsFailure)
+            {
+                return BadRequest(createdEntity);
+            }
+
+            await InvalidateCache();
 
             return Ok(createdEntity);
         }
@@ -93,13 +99,21 @@ namespace Nestelia.WebAPI.Controllers.Base
             }
 
             var entity = await _service.GetById(x => x.Id == id);
-            if (entity == null)
+            if (entity.IsFailure)
             {
-                return NotFound();
+                return NotFound(entity);
             }
+
+            dto.Id = id;
 
             var updatedEntity = await _service.ConvertToEntity(dto);
             var result = await _service.UpdateAsync(updatedEntity);
+            if (result.IsFailure)
+            {
+                return BadRequest(result);
+            }
+
+            await InvalidateCache();
 
             return Ok(result);
         }
@@ -113,6 +127,12 @@ namespace Nestelia.WebAPI.Controllers.Base
         public virtual async Task<IActionResult> Delete(Guid id)
         {
             var result = await _service.RemoveAsync(id);
+            if (result.IsFailure)
+            {
+                return BadRequest(result);
+            }
+
+            await InvalidateCache();
 
             return Ok(result);
 

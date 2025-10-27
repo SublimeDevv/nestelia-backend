@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Nestelia.Application.Interfaces.Auth;
 using Nestelia.Domain.Common.ViewModels.Util;
 using Nestelia.Domain.DTO.Auth;
@@ -83,8 +84,9 @@ namespace Nestelia.WebAPI.Controllers.Auth
         }
 
         [HttpGet("me")]
-        [Authorize] 
-      public async Task<IActionResult> GetCurrentUser()
+        [Authorize]
+        [OutputCache(Duration = 3600, VaryByHeaderNames = new[] { "Authorization" })]
+        public async Task<IActionResult> GetCurrentUser()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 

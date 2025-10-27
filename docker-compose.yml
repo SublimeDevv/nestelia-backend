@@ -13,11 +13,15 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      - ConnectionStrings__RedisConnection=${REDIS_CONNECTION}
       - Jwt__Key=${JWT_KEY}
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
       - Ollama__BaseUrl=${OLLAMA_BASE_URL}
       - ChromaDB__BaseUrl=${CHROMADB_BASE_URL}
+      - Supabase__Url=${SUPABASE_URL}
+      - Supabase__ApiKey=${SUPABASE_KEY}
+      - Supabase__MainBucket=${SUPABASE_BUCKET_NAME}
       - AllowedHosts=*
     env_file:
       - .env

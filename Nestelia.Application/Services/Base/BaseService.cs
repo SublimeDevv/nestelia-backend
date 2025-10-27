@@ -1,170 +1,93 @@
 ﻿using AutoMapper;
-using Nestelia.Domain.DTO;
-using System.Linq.Expressions;
-using Nestelia.Domain.Common.ViewModels.Util;
 using Nestelia.Application.Extensions;
-using Serilog;
 using Nestelia.Application.Interfaces.Base;
-using System.Text.Json;
+using Nestelia.Domain.DTO;
+using Nestelia.Domain.Shared;
 using Nestelia.Infraestructure.Interfaces.Generic;
+using System.Linq.Expressions;
 
 namespace Nestelia.Application.Services.Base
 {
-    public class ServiceBase<T, TDto> : IServiceBase<T, TDto> where T : class where TDto : BaseDto
+    public class ServiceBase<T, TDto>(IMapper mapper, IBaseRepository<T> baseRepository) : IServiceBase<T, TDto> where T : class where TDto : BaseDto
     {
-        private readonly IMapper _mapper;
-        private readonly IBaseRepository<T> _repository;
+        private readonly IMapper _mapper = mapper;
+        private readonly IBaseRepository<T> _repository = baseRepository;
 
-        public ServiceBase(IMapper mapper, IBaseRepository<T> baseRepository)
+        public async Task<Result> GetAllAsync(int page = 1, int size = 10, Expression<Func<T, bool>>? filter = null)
         {
-            _mapper = mapper;
-            _repository = baseRepository;
+            page = Math.Max(1, page);
+            size = Math.Clamp(size, 1, 100);
+
+            var pagedData = await _repository.GetAllAsync(page, size, filter);
+
+            return Result.Success(pagedData.Items, "Lista obtenida correctamente").With("pagination", new { currentPage = page, pageSize = size, totalPages = pagedData.TotalPages });
         }
 
-        public async Task<ResponseHelper> GetAllAsync(Expression<Func<T, bool>>? filter = null)
+        public virtual async Task<Result> InsertAsync(T entity)
         {
-            ResponseHelper response = new ResponseHelper();
-            try
+
+            var result = await _repository.InsertAsync(entity);
+            if (result == Guid.Empty)
             {
-                var data = await _repository.GetAllAsync(filter);
-
-                response.Success = true;
-                response.Data = data;
-
-                string dataAsJson = JsonSerializer.Serialize(response.Data); 
-            }
-            catch (Exception e)
-            {   
-                Log.Error(e.Message);
-                response.Message = e.Message;
+                return Result.Failure($"No se pudo insertar el elemento de tipo {typeof(T).GetDisplayName()}.");
             }
 
-            return response;
+            var idProperty = entity.GetType().GetProperty("Id");
+            if (idProperty != null && idProperty.CanWrite)
+            {
+                idProperty.SetValue(entity, result, null);
+            }
+
+            return Result.Success(entity, "El elemento fue insertado correctamente");
+
         }
 
-        public virtual async Task<ResponseHelper> InsertAsync(T entity)
+        public async Task<Result> UpdateAsync(T entity)
         {
-            ResponseHelper response = new ResponseHelper();
-            try
+
+            var result = await _repository.UpdateAsync(entity);
+            if (result <= 0)
             {
-                var result = await _repository.InsertAsync(entity);
-
-                if (result != Guid.Empty)
-                {
-                    response.Message = $"El elemento {typeof(T).GetDisplayName()} fue insertado con éxito.";
-                    response.Success = true;
-                    response.Data = entity;
-
-                    Log.Information(response.Message);
-
-                    var idProperty = entity.GetType().GetProperty("Id");
-                    if (idProperty != null && idProperty.CanWrite)
-                    {
-                        idProperty.SetValue(entity, result, null);
-                    }
-                    response.Data = entity;
-                }
+                return Result.Failure($"No se pudo actualizar el elemento de tipo {typeof(T).GetDisplayName()}.");
             }
-            catch (Exception e)
-            {
-                Log.Error(e.Message);
-                response.Message = e.Message;
-            }
-            return response;
+
+            return Result.Success(entity, $"El elemento {typeof(T).GetDisplayName()} fue actualizado correctamente");
         }
 
-        public async Task<ResponseHelper> UpdateAsync(T entity)
+        public async Task<Result> RemoveAsync(T entity)
         {
-            ResponseHelper response = new ResponseHelper();
-            try
+            var result = await _repository.RemoveAsync(entity);
+            if (result <= 0)
             {
-                var result = await _repository.UpdateAsync(entity);
-
-                if (result > 0)
-                {
-                    response.Message = $"El elemento {typeof(T).GetDisplayName()} fue actualizado con éxito.";
-                    response.Success = true;
-                    response.Data = entity;
-
-                    Log.Information(response.Message);
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error(e.Message);
-                response.Message = e.Message;
+                return Result.Failure($"No se pudo eliminar el elemento de tipo {typeof(T).GetDisplayName()}.");
             }
 
-            return response;
+            return Result.Success(entity, $"El elemento {typeof(T).GetDisplayName()} fue eliminado correctamente");
+
         }
 
-        public async Task<ResponseHelper> RemoveAsync(T entity)
+        public async Task<Result> RemoveAsync(Guid id)
         {
-            ResponseHelper response = new ResponseHelper();
-            try
-            {
-                var result = await _repository.RemoveAsync(entity);
 
-                if (result > 0)
-                {
-                    response.Message = $"El elemento  {typeof(T).GetDisplayName()} fue eliminado con éxito.";
-
-                    response.Success = true;
-                    response.Data = entity; 
-                   
-                    Log.Information(response.Message);
-                }
-            }
-            catch (Exception e)
+            var result = await _repository.RemoveAsync(id);
+            if (result <= 0)
             {
-                Log.Error(e.Message);
-                response.Message = e.Message;
+                return Result.Failure($"No se pudo eliminar el elemento de tipo {typeof(T).GetDisplayName()}.");
             }
 
-            return response;
+            return Result.Success(id, $"El elemento {typeof(T).GetDisplayName()} fue eliminado correctamente");
         }
 
-        public async Task<ResponseHelper> RemoveAsync(Guid id)
+        public async Task<Result<T>> GetById(Expression<Func<T, bool>>? filter = null)
         {
-            ResponseHelper response = new ResponseHelper();
-            try
+            var data = await _repository.GetSingleAsync(filter);
+            if (data is null)
             {
-                var result = await _repository.RemoveAsync(id);
-
-                if (result > 0)
-                {
-                    response.Message = $"El elemento  {typeof(T).GetDisplayName()} fue eliminado con éxito.";
-                    response.Success = true;
-                    response.Data = result;
-
-                    Log.Information(response.Message);
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error(e.Message);
-                response.Message = e.Message;
+                return Result.Failure<T>($"No se encontró el elemento de tipo {typeof(T).GetDisplayName()}.");
             }
 
-            return response;
-        }
+            return Result.Success(data, "Elemento obtenido correctamente");
 
-        public async Task<ResponseHelper> GetById(Expression<Func<T, bool>>? filter = null)
-        {
-            ResponseHelper response = new ResponseHelper();
-            try
-            {
-                var data = await _repository.GetSingleAsync(filter);
-                response.Success = true;
-                response.Data = data;
-            }
-            catch (Exception e)
-            {
-                Log.Error(e.Message);
-                response.Message = e.Message;
-            }
-
-            return response;
         }
 
         public async Task<TDto> ConvertToDto(T entity)

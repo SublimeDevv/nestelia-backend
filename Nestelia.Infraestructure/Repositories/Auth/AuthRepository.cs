@@ -66,17 +66,16 @@ namespace Nestelia.Infraestructure.Repositories.Auth
         public async Task<UserVM> GetUserById(string id)
         {
             string query = @"
-                    SELECT 
-                        u.""Id"", 
-                        u.""Email"", 
-                        u.""UserName"",
-                        r.""Name"" AS ""Role""
-                    FROM ""AspNetUsers"" u
-                    LEFT JOIN ""AspNetUserRoles"" ur ON u.""Id"" = ur.""UserId""
-                    LEFT JOIN ""AspNetRoles"" r ON ur.""RoleId"" = r.""Id""
-                    WHERE u.""Id"" = @id
-                    ORDER BY ur.""RoleId"" DESC
-                    LIMIT 1";
+                SELECT TOP 1
+                    u.Id, 
+                    u.Email, 
+                    u.UserName,
+                    r.Name AS Role
+                FROM AspNetUsers u
+                LEFT JOIN AspNetUserRoles ur ON u.Id = ur.UserId
+                LEFT JOIN AspNetRoles r ON ur.RoleId = r.Id
+                WHERE u.Id = @id
+                ORDER BY ur.RoleId DESC";
 
             var connection =  _context.Database.GetDbConnection();
 

@@ -10,9 +10,15 @@ using Nestelia.Infraestructure.Common;
 using Nestelia.Infraestructure.Interfaces.AuditLogs;
 using Nestelia.Infraestructure.Interfaces.Auth;
 using Nestelia.Infraestructure.Interfaces.Bot;
+using Nestelia.Infraestructure.Interfaces.Wiki.Categories;
+using Nestelia.Infraestructure.Interfaces.Wiki.Entries;
+using Nestelia.Infraestructure.Interfaces.Wiki.Posts;
 using Nestelia.Infraestructure.Repositories.AuditLogs;
 using Nestelia.Infraestructure.Repositories.Auth;
 using Nestelia.Infraestructure.Repositories.Bot;
+using Nestelia.Infraestructure.Repositories.Wiki.Categories;
+using Nestelia.Infraestructure.Repositories.Wiki.Entries;
+using Nestelia.Infraestructure.Repositories.Wiki.Posts;
 
 namespace Nestelia.Infraestructure;
 
@@ -70,8 +76,24 @@ public static class DependencyInjection
         });
 
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
-                
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+
+        services.AddOutputCache(options =>
+        {
+            options.AddBasePolicy(builder => builder.Expire(TimeSpan.FromMinutes(10)));
+
+            options.AddPolicy("Expire30", builder => builder.Expire(TimeSpan.FromMinutes(30)));
+            options.AddPolicy("Expire1Hour", builder => builder.Expire(TimeSpan.FromHours(1)));
+            options.AddPolicy("EntityCache", builder => builder.Expire(TimeSpan.FromHours(1)).Tag("entity"));
+            options.AddPolicy("EntityVaryByQuery", builder => builder.SetVaryByQuery("page", "size").Expire(TimeSpan.FromHours(1)).Tag("entity"));
+        });
+
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = configuration.GetConnectionString("RedisConnection");
+            options.InstanceName = "OutputCache";
+        });
+
         AddRepository(services);
         
         return services;
@@ -89,6 +111,9 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IBotRepository, BotRepository>();
         services.AddSingleton<IPdfProcessor, PdfProcessor>();
-
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IPostRepository, PostRepository > ();
+        services.AddScoped<IWikiEntryRepository, WikiEntryRepository>();
+        services.AddScoped<ICommentRepository, CommentRepository>();
     }
 }

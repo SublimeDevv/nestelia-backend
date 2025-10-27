@@ -1,11 +1,12 @@
-﻿using System.Data;
-using System.Linq.Expressions;
-using System.Security.Claims;
-using Dapper;
+﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
+using Nestelia.Domain.Common.Util;
 using Nestelia.Domain.Entities.Audit;
 using Nestelia.Infraestructure.Common;
+using Newtonsoft.Json;
+using System.Data;
+using System.Linq.Expressions;
+using System.Security.Claims;
 
 namespace Nestelia.Infraestructure.Repositories.Generic
 {
@@ -222,12 +223,11 @@ namespace Nestelia.Infraestructure.Repositories.Generic
         /// </summary>
         /// <param name="filter">The filter.</param>
         /// <returns></returns>
-        public virtual async Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null)
+        public virtual async Task<PagedResult<T>> GetAllAsync(int page = 1, int size = 10, Expression<Func<T, bool>>? filter = null)
         {
             IQueryable<T> query = Context.Set<T>();
 
             var isDeletable = typeof(T).GetProperty("IsDeleted") != null;
-
             if (isDeletable)
             {
                 query = query.Where(e => EF.Property<bool>(e, "IsDeleted") == false);
@@ -238,7 +238,22 @@ namespace Nestelia.Infraestructure.Repositories.Generic
                 query = query.Where(filter);
             }
 
-            return await query.ToListAsync();
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)size);
+
+            var data = await query
+                .Skip((page - 1) * size)
+                .Take(size)
+                .ToListAsync();
+
+            return new PagedResult<T>
+            {
+                Items = data,
+                Page = page,
+                Size = size,
+                TotalCount = totalCount,
+                TotalPages = totalPages
+            };
         }
 
 
@@ -284,7 +299,7 @@ namespace Nestelia.Infraestructure.Repositories.Generic
 
         public async Task<int> AuditTable(AuditChanges audit)
         {
-            var sql = @"INSERT INTO [dbo].[Tbl_AuditChanges]
+            var sql = @"INSERT INTO [dbo].[AuditChanges]
                                    ([Id]
                                    ,[TableName]
                                    ,[OldValue]
@@ -318,7 +333,7 @@ namespace Nestelia.Infraestructure.Repositories.Generic
 
         public async Task<int> AuditTable(AuditChanges audit, IDbTransaction? transaction = null)
         {
-            var sql = @"INSERT INTO [dbo].[Tbl_AuditChanges]
+            var sql = @"INSERT INTO [dbo].[AuditChanges]
                                        ([Id]
                                        ,[TableName]
                                        ,[OldValue]

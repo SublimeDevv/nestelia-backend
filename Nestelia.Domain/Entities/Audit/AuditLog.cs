@@ -3,7 +3,7 @@ using static Nestelia.Domain.Common.Util.Enums;
 
 namespace Nestelia.Domain.Entities.Audit
 {
-    [Table("Tbl_AuditLogs")]
+    [Table("AuditLogs")]
     public class AuditLog: BaseEntity
     {
         public string? Message { get; set; }

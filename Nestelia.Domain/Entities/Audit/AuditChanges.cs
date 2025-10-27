@@ -2,7 +2,7 @@
 
 namespace Nestelia.Domain.Entities.Audit
 {
-    [Table("Tbl_AuditChanges")]
+    [Table("AuditChanges")]
     public class AuditChanges: BaseEntity
     {
         public required string Action { get; set; }

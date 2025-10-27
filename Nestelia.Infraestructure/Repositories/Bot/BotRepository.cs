@@ -14,7 +14,7 @@ namespace Nestelia.Infraestructure.Repositories.Bot
 
         public async Task<BotConfigurationVM?> GetApiKey()
         {
-            string sql = @"SELECT ""Value"" AS ApiKey FROM ""bot_configurations"" WHERE ""Key"" = @Key";
+            string sql = @"SELECT ""Value"" AS ApiKey FROM ""BotConfigurations"" WHERE ""Key"" = @Key";
             var result = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<BotConfigurationVM>(sql, new { Key = "ApiKey" });
 
             return result;
@@ -31,7 +31,7 @@ namespace Nestelia.Infraestructure.Repositories.Bot
                 CreatedAt = DateTime.UtcNow
             };
 
-            string sql = @"INSERT INTO ""bot_configurations"" (""Id"", ""Key"", ""Value"", ""IsDeleted"", ""CreatedAt"") 
+            string sql = @"INSERT INTO ""BotConfigurations"" (""Id"", ""Key"", ""Value"", ""IsDeleted"", ""CreatedAt"") 
                    VALUES (@Id, @Key, @Value, @IsDeleted, @CreatedAt)";
 
             var affectedRows = await _context.Database.GetDbConnection().ExecuteAsync(sql, config);
@@ -41,14 +41,14 @@ namespace Nestelia.Infraestructure.Repositories.Bot
 
         public async Task<bool> UpdateApiKey(BotDto botDto)
         {
-            string sql = @"UPDATE ""bot_configurations"" SET ""Value"" = @Value WHERE ""Key"" = @Key";
+            string sql = @"UPDATE ""BotConfigurations"" SET ""Value"" = @Value WHERE ""Key"" = @Key";
             var affectedRows = await _context.Database.GetDbConnection().ExecuteAsync(sql, new { botDto.Value, Key = "ApiKey" });
             return affectedRows > 0;
         }
 
         public async Task<BotConfigurationVM?> GetModelName()
         {
-            string sql = @"SELECT ""Value"" AS ModelName FROM ""bot_configurations"" WHERE ""Key"" = @Key";
+            string sql = @"SELECT ""Value"" AS ModelName FROM ""BotConfigurations"" WHERE ""Key"" = @Key";
             var result = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<BotConfigurationVM>(sql, new { Key = "ModelName" });
             return result;
         }
@@ -63,7 +63,7 @@ namespace Nestelia.Infraestructure.Repositories.Bot
                 IsDeleted = false,
                 CreatedAt = DateTime.UtcNow
             };
-            string sql = @"INSERT INTO ""bot_configurations"" (""Id"", ""Key"", ""Value"", ""IsDeleted"", ""CreatedAt"") 
+            string sql = @"INSERT INTO ""BotConfigurations"" (""Id"", ""Key"", ""Value"", ""IsDeleted"", ""CreatedAt"") 
                    VALUES (@Id, @Key, @Value, @IsDeleted, @CreatedAt)";
             var affectedRows = await _context.Database.GetDbConnection().ExecuteAsync(sql, config);
             return affectedRows > 0;
@@ -72,7 +72,7 @@ namespace Nestelia.Infraestructure.Repositories.Bot
 
         public async Task<bool> UpdateModelName(BotDto botDto)
         {
-            string sql = @"UPDATE ""bot_configurations"" SET ""Value"" = @Value WHERE ""Key"" = @Key";
+            string sql = @"UPDATE ""BotConfigurations"" SET ""Value"" = @Value WHERE ""Key"" = @Key";
             var affectedRows = await _context.Database.GetDbConnection().ExecuteAsync(sql, new { botDto.Value, Key = "ModelName" });
             return affectedRows > 0;
         }

@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using Nestelia.Domain.Common.Util;
+using System.Linq.Expressions;
 
 
 namespace Nestelia.Infraestructure.Interfaces.Generic
@@ -38,7 +39,8 @@ namespace Nestelia.Infraestructure.Interfaces.Generic
         /// </summary>
         /// <param name="filter">The filter.</param>
         /// <returns></returns>
-        Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null);
+        Task<PagedResult<T>> GetAllAsync(int page = 1, int size = 10, Expression<Func<T, bool>>? filter = null);
+
         /// <summary>
         /// Gets the single asynchronous.
         /// </summary>

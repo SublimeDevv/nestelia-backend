@@ -47,7 +47,7 @@ namespace Nestelia.WebAPI
                 {
                     Version = "v1",
                     Title = "Nestelia API",
-                    Description = "API de Nestelia - Sistema de Gestión de Proyectos",
+                    Description = "API de Nestelia",
                     Contact = new OpenApiContact
                     {
                         Name = "Nestelia Team"

@@ -2,7 +2,7 @@
 
 namespace Nestelia.Domain.Entities.Bot
 {
-    [Table("bot_configurations")]
+    [Table("BotConfigurations")]
     public class Configuration: BaseEntity
     {
         public string? Key { get; set; }
