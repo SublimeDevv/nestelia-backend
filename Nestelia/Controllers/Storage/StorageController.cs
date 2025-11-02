@@ -32,24 +32,7 @@ namespace Nestelia.WebAPI.Controllers.Storage
         [HttpPost("upload")]
         public async Task<IActionResult> UploadFile(IFormFile file, string folder)
         {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest(new { message = "No se proporcionó ningún archivo." });
-            }
-
-            if (string.IsNullOrWhiteSpace(folder))
-            {
-                return BadRequest(new { message = "Debe especificar una carpeta." });
-            }
-
-            byte[] fileContent;
-            using (var memoryStream = new MemoryStream())
-            {
-                await file.CopyToAsync(memoryStream);
-                fileContent = memoryStream.ToArray();
-            }
-
-            var result = await storageService.UploadFileAsync(folder, file.FileName, fileContent);
+            var result = await storageService.UploadFileAsync(folder, file);
 
             if (!result.IsSuccess)
             {

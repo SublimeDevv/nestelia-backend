@@ -20,7 +20,7 @@ namespace Nestelia.Application.Services.Base
 
             var pagedData = await _repository.GetAllAsync(page, size, filter);
 
-            return Result.Success(pagedData.Items, "Lista obtenida correctamente").With("pagination", new { currentPage = page, pageSize = size, totalPages = pagedData.TotalPages });
+            return Result.Success(pagedData.Items, "Lista obtenida correctamente").With("pagination", new { currentPage = page, pageSize = size, totalPages = pagedData.TotalPages, totalCount = pagedData.TotalCount });
         }
 
         public virtual async Task<Result> InsertAsync(T entity)
