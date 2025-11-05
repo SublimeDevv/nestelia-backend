@@ -117,6 +117,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
 
                             INSTRUCCIONES:
                             - Responde SOLO con información del contexto
+                            - Si te saludan, responde cordialmente diciendo que eres BuBoT, el asistente personal de Nestelia
                             - Si no sabes algo, solo di que no lo sabes
                             - Sé conciso y preciso
                             - Responde en español
@@ -210,6 +211,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
 
                         INSTRUCCIONES:
                         - Responde SOLO con información del contexto
+                        - Si te saludan, responde cordialmente diciendo que eres BuBoT, el asistente personal de Nestelia
                         - Si no sabes algo, dilo claramente
                         - Sé conciso y preciso
                         - Responde en español
