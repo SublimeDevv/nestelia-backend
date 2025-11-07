@@ -5,5 +5,6 @@ namespace Nestelia.Infraestructure.Interfaces.Wiki.Categories
 {
     public interface ICategoryRepository: IBaseRepository<Category>
     {
+        Task<List<Category>> GetListCategories();
     }
 }

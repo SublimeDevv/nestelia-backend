@@ -6,6 +6,8 @@ namespace Nestelia.Domain.Entities.Wiki.Categories
     public class Category: BaseEntity
     {
         public string Name { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public string? Icon {  get; set; }
         public string Description { get; set; } = string.Empty;
     }
 }

@@ -8,6 +8,6 @@ namespace Nestelia.Application.Interfaces.Wiki.Entries
     public interface IWikiEntryService: IServiceBase<WikiEntry, WikiEntryDto>
     {
         Task<Result<bool>> CreateWikiEntry(CreateWikiEntryDto createWikiEntryDto);
-        Task<Result> GetEntriesByCategoryAsync(string param, int page = 1, int size = 10);
+        Task<Result> GetEntriesByCategoryAsync(string category, string param, int page = 1, int size = 10);
     }
 }

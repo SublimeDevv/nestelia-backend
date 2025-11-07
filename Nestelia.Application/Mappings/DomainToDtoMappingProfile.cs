@@ -23,6 +23,7 @@ namespace Nestelia.Application.Mappings
             this.CreateMap<WikiEntry, WikiEntryDto>().ReverseMap();
             this.CreateMap<Post, PostDto>().ReverseMap();
             this.CreateMap<Comment, CommentDto>().ReverseMap();
+            this.CreateMap<New, NewDto>().ReverseMap();
         }
     }
 }

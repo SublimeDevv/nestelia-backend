@@ -6,6 +6,6 @@ namespace Nestelia.Infraestructure.Interfaces.Wiki.Entries
 {
     public interface IWikiEntryRepository: IBaseRepository<WikiEntry>
     {
-        Task<PagedResult<WikiEntry>> GetEntriesByCategory(string param, int page, int pageSize);
+        Task<PagedResult<WikiEntry>> GetEntriesByCategory(string category, string param, int page, int pageSize);
     }
 }

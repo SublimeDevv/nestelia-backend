@@ -27,9 +27,9 @@ namespace Nestelia.WebAPI.Controllers.Wiki.Entries
 
         [OutputCache(PolicyName = "EntityVaryByQuery")]
         [HttpGet("get-entries-by-category")]
-        public async Task<IActionResult> GetEntriesByCategoryAsync([FromQuery] string param, [FromQuery] int page = 1, [FromQuery] int size = 10)
+        public async Task<IActionResult> GetEntriesByCategoryAsync([FromQuery] string category, [FromQuery] string param = "", [FromQuery] int page = 1, [FromQuery] int size = 10)
         {
-            var result = await _service.GetEntriesByCategoryAsync(param, page, size);
+            var result = await _service.GetEntriesByCategoryAsync(category, param, page, size);
             if (!result.IsSuccess)
             {
                 return BadRequest(result);

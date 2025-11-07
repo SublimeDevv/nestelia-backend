@@ -56,17 +56,17 @@ namespace Nestelia.Application.Services.Wiki.Entries
             return Result.Success(true, "Entrada wiki creada exitosamente.");
         }
 
-        public async Task<Result> GetEntriesByCategoryAsync(string param, int page = 1, int size = 10)
+        public async Task<Result> GetEntriesByCategoryAsync(string category, string param, int page = 1, int size = 10)
         {
-            if (string.IsNullOrWhiteSpace(param))
+            if (string.IsNullOrWhiteSpace(category))
             {
-                return Result.Failure("El parámetro de búsqueda no puede estar vacío.");
+                return Result.Failure("El parámetro de categoría no puede estar vacío.");
             }
 
             page = Math.Max(1, page);
             size = Math.Clamp(size, 1, 100);
 
-            var pagedData = await _wikiEntryRepository.GetEntriesByCategory(param, page, size);
+            var pagedData = await _wikiEntryRepository.GetEntriesByCategory(category, param, page, size);
 
             var imageTasks = pagedData.Items
                 .Where(e => !string.IsNullOrEmpty(e.Image))

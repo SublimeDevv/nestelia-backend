@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<IWikiEntryService, WikiEntryService>();
         services.AddScoped<IPostService, PostService>();
         services.AddScoped<ICommentService, CommentService>();
+        services.AddScoped<INewService, NewService>();
         services.AddHttpContextAccessor();
         services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
         services.AddTransient(s =>

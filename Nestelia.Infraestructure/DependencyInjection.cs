@@ -115,5 +115,6 @@ public static class DependencyInjection
         services.AddScoped<IPostRepository, PostRepository > ();
         services.AddScoped<IWikiEntryRepository, WikiEntryRepository>();
         services.AddScoped<ICommentRepository, CommentRepository>();
+        services.AddScoped<INewRepository, NewRepository>();
     }
 }
