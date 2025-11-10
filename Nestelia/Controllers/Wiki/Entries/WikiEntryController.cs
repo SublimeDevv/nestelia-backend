@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Nestelia.Application.Interfaces.Wiki.Entries;
 using Nestelia.Domain.DTO.Wiki.Entries;
@@ -12,6 +13,7 @@ namespace Nestelia.WebAPI.Controllers.Wiki.Entries
         private readonly IWikiEntryService _service = service;
 
         [HttpPost("create-wiki-entry")]
+        [Authorize]
         public async Task<IActionResult> CreateWikiEntry(CreateWikiEntryDto wikiEntry)
         {
             var result = await _service.CreateWikiEntry(wikiEntry);
@@ -26,6 +28,7 @@ namespace Nestelia.WebAPI.Controllers.Wiki.Entries
         }
 
         [HttpPut("update-wiki-entry/{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateWikiEntry(Guid id, UpdateWikiEntryDto wikiEntry)
         {
             wikiEntry.Id = id;

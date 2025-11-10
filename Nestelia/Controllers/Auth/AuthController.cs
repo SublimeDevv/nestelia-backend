@@ -12,20 +12,20 @@ namespace Nestelia.WebAPI.Controllers.Auth
     public class AuthController(IAuthService authService) : ControllerBase
     {
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register(UserDto userDto)
-        {
-            var userCreated = await authService.CreateAccount(userDto);
-            if (!userCreated.IsSuccess) return BadRequest(userCreated);
+        //[HttpPost("register")]
+        //public async Task<IActionResult> Register(UserDto userDto)
+        //{
+        //    var userCreated = await authService.CreateAccount(userDto);
+        //    if (!userCreated.IsSuccess) return BadRequest(userCreated);
 
-            if (userCreated.Data is null) return BadRequest();
+        //    if (userCreated.Data is null) return BadRequest();
 
-            authService.SetTokensInsideCookie(await authService.CreateTokens(userCreated.Data));
+        //    authService.SetTokensInsideCookie(await authService.CreateTokens(userCreated.Data));
 
-            var getUserResult = await authService.GetUserById(userCreated.Data.Id);
+        //    var getUserResult = await authService.GetUserById(userCreated.Data.Id);
 
-            return Ok(getUserResult);
-        }
+        //    return Ok(getUserResult);
+        //}
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto LoginDto)

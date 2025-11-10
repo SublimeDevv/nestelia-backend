@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Nestelia.Application.Interfaces.Base;
 using Nestelia.Domain.DTO;
@@ -69,6 +70,7 @@ namespace Nestelia.WebAPI.Controllers.Base
         /// <param name="dto">The dto.</param>
         /// <returns></returns>
         [HttpPost]
+        [Authorize]
         public virtual async Task<ActionResult<TDto>> Create(TDto dto)
         {
             var entity = await _service.ConvertToEntity(dto);
@@ -91,6 +93,7 @@ namespace Nestelia.WebAPI.Controllers.Base
         /// <param name="dto">The dto.</param>
         /// <returns></returns>
         [HttpPut("{id}")]
+        [Authorize]
         public virtual async Task<ActionResult<TDto>> Update(Guid id, TDto dto)
         {
             if (id == Guid.Empty)
@@ -124,6 +127,7 @@ namespace Nestelia.WebAPI.Controllers.Base
         /// <param name="id">The identifier.</param>
         /// <returns></returns>
         [HttpDelete("{id}")]
+        [Authorize]
         public virtual async Task<IActionResult> Delete(Guid id)
         {
             var result = await _service.RemoveAsync(id);

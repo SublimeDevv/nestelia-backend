@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Nestelia.Application.Interfaces.Bot;
 using Nestelia.Domain.DTO.Bot;
@@ -37,6 +38,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
         }
 
         [HttpPost("upload")]
+        [Authorize]
         public async Task<IActionResult> UploadPdf(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -79,6 +81,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
         }
 
         [HttpPost("query")]
+        [Authorize]
         public async Task<ActionResult<QueryResponse>> Query([FromBody] QueryRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Question))
@@ -143,6 +146,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
         }
 
         [HttpPost("query-stream")]
+        [Authorize]
         public async Task QueryStream([FromBody] QueryRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Question))
@@ -261,6 +265,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
         }
 
         [HttpDelete("clear-chromadb")]
+        [Authorize]
         public async Task<IActionResult> ClearDatabase()
         {
             try
@@ -280,6 +285,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
         }
 
         [HttpPost("createApiKey")]
+        [Authorize]
         public async Task<IActionResult> CreateApiKey([FromBody] BotDto botDto)
         {
             var result = await _botService.CreateApiKey(botDto);
@@ -289,6 +295,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
         }
 
         [HttpPut("updateApiKey")]
+        [Authorize]
         public async Task<IActionResult> UpdateApiKey([FromBody] BotDto botDto)
         {
             var result = await _botService.UpdateApiKey(botDto);
@@ -298,6 +305,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
 
 
         [HttpGet("getModelName")]
+        [Authorize]
         [OutputCache(NoStore = true)]
         public async Task<IActionResult> GetModelName()
         {
@@ -307,6 +315,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
         }
 
         [HttpPost("createModelName")]
+        [Authorize]
         public async Task<IActionResult> CreateModelName([FromBody] BotDto botDto)
         {
             var result = await _botService.CreateModelName(botDto);
@@ -315,6 +324,7 @@ namespace Nestelia.WebAPI.Controllers.Bot
         }
 
         [HttpPut("updateModelName")]
+        [Authorize]
         public async Task<IActionResult> UpdateModelName([FromBody] BotDto botDto)
         {
             var result = await _botService.UpdateModelName(botDto);

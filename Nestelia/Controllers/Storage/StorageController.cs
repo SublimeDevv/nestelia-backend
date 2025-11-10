@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Nestelia.Application.Interfaces.Storage;
 
 namespace Nestelia.WebAPI.Controllers.Storage
@@ -19,6 +20,7 @@ namespace Nestelia.WebAPI.Controllers.Storage
         }
 
         [HttpPost("create-main-bucket")]
+        [Authorize]
         public async Task<IActionResult> CreateMainBucket()
         {
             var result = await storageService.CreateMainBucket();
@@ -30,6 +32,7 @@ namespace Nestelia.WebAPI.Controllers.Storage
         }
 
         [HttpPost("upload")]
+        [Authorize]
         public async Task<IActionResult> UploadFile(IFormFile file, string folder)
         {
             var result = await storageService.UploadFileAsync(folder, file);

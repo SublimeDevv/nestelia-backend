@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Nestelia.Application.Interfaces.Wiki.Posts;
 using Nestelia.Domain.DTO.Wiki.Posts;
 using Nestelia.Domain.Entities.Wiki.Posts;
@@ -11,6 +12,7 @@ namespace Nestelia.WebAPI.Controllers.Wiki.Posts
         private readonly IPostService _service = service;
 
         [HttpPost("createPost")]
+        [Authorize]
         public async Task<IActionResult> CreatePost(CreatePostDto postDto)
         {
             var result = await _service.CreatePost(postDto);
@@ -23,6 +25,7 @@ namespace Nestelia.WebAPI.Controllers.Wiki.Posts
         }
 
         [HttpPut("updatePost/{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdatePost(Guid id, UpdatePostDto postDto)
         {
             postDto.Id = id;

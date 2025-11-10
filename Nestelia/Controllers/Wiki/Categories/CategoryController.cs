@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Nestelia.Application.Interfaces.Wiki.Categories;
 using Nestelia.Domain.DTO.Wiki.Categories;
@@ -12,6 +13,7 @@ namespace Nestelia.WebAPI.Controllers.Wiki.Categories
         private readonly ICategoryService _service = service;
 
         [HttpPost("create-category")]
+        [Authorize]
         public async Task<IActionResult> CreateCategory(CreateCategoryDto categoryDto)
         {
             var result = await _service.CreateCategory(categoryDto);
@@ -26,6 +28,7 @@ namespace Nestelia.WebAPI.Controllers.Wiki.Categories
         }
 
         [HttpPut("update-category/{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateCategory(Guid id, UpdateCategoryDto categoryDto)
         {
             categoryDto.Id = id;
