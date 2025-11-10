@@ -79,7 +79,10 @@ namespace Nestelia.Application.Services.Storage
                 return Result.Failure<string>("Bucket does not exist.");
             }
 
-            var storagePath = $"{folder.ToLower()}/{file.FileName}";
+            var fileName = Path.GetFileNameWithoutExtension(file.FileName);
+            var uniqueId = Guid.NewGuid().ToString("N")[..8]; 
+            var uniqueFileName = $"{fileName}_{uniqueId}{extension}";
+            var storagePath = $"{folder.ToLower()}/{uniqueFileName}";
 
             var uploadResult = await supabase.Storage.From(bucketName).Upload(fileContent, storagePath);
             if (uploadResult is null)

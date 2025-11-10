@@ -13,6 +13,8 @@ namespace Nestelia.Application.Interfaces.Auth
         Task<Result<UserVM>> GetUserById(string id);
         Task<TokenResponse> CreateTokens(ApplicationUser user);
         Task<Result<TokenResponse>> RefreshToken(string request);
-        void SetTokensInsideCookie(TokenResponse tokenDto, HttpContext context);
+        string GetIdentity();
+        void SetTokensInsideCookie(TokenResponse tokenDto);
+        void RemoveTokensFromCookies();
     }
 }

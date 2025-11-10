@@ -26,8 +26,9 @@ namespace Nestelia.WebAPI.Controllers.Wiki.Categories
         }
 
         [HttpPut("update-category/{id}")]
-        public async Task<IActionResult> UpdateCategory(Guid id, CreateCategoryDto categoryDto)
+        public async Task<IActionResult> UpdateCategory(Guid id, UpdateCategoryDto categoryDto)
         {
+            categoryDto.Id = id;
             var result = await _service.UpdateCategory(categoryDto);
             if (!result.IsSuccess)
             {
@@ -48,6 +49,19 @@ namespace Nestelia.WebAPI.Controllers.Wiki.Categories
             }
             return Ok(result);
         }
+
+        [OutputCache(PolicyName = "EntityCache")]
+        [HttpGet("getById/{id}")]
+        public async Task<IActionResult> GetCategoryById(Guid id)
+        {
+            var result = await _service.GetById(id);
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
     }
 
 }

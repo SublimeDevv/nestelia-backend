@@ -4,15 +4,10 @@ using Nestelia.Domain.Entities.Bot;
 
 namespace Nestelia.Application.Services.Bot
 {
-    public class InMemoryVectorStore : IVectorStore
+    public class InMemoryVectorStore(ILogger<InMemoryVectorStore> logger) : IVectorStore
     {
-        private readonly List<DocumentChunk> _chunks = new();
-        private readonly ILogger<InMemoryVectorStore> _logger;
-
-        public InMemoryVectorStore(ILogger<InMemoryVectorStore> logger)
-        {
-            _logger = logger;
-        }
+        private readonly List<DocumentChunk> _chunks = [];
+        private readonly ILogger<InMemoryVectorStore> _logger = logger;
 
         public async Task AddDocumentAsync(PdfDocument document, IOllamaService ollamaService)
         {

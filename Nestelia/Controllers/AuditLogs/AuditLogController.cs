@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Nestelia.Application.Interfaces.AuditLogs;
 using Nestelia.Domain.DTO.AuditLogs;
 using Nestelia.Domain.Entities.Audit;
@@ -12,31 +13,15 @@ namespace Nestelia.WebAPI.Controllers.AuditLogs
     {
         private readonly IAuditLogService _service = service;
 
-        [HttpGet("GetAuditLogs")]
-        public async Task<IActionResult> GetAuditLogs([FromQuery] int? level = null, [FromQuery] int? httpMethod = null, int offset = 0, int pageSize = 10)
+        [HttpGet("dashboard")]
+        [OutputCache(PolicyName = "EntityCache")]
+        public async Task<IActionResult> GetDashboardInformation()
         {
-            var result = await _service.GetAuditLogs(level, httpMethod, offset, pageSize);
-            return Ok(result);
-        }
-
-        [HttpGet("GetCountLogs")]
-        public async Task<IActionResult> GetCountLogs(int level = 0, int httpMethod = 0)
-        {
-            var result = await _service.GetCountLogs(level, httpMethod);
-            return Ok(result);
-        }
-
-        [HttpGet("GetAuditEntities")]
-        public async Task<IActionResult> GetAuditEntities()
-        {
-            var result = await _service.GetAuditEntities();
-            return Ok(result);
-        }
-
-        [HttpGet("GetAuditLogsCount")]
-        public async Task<IActionResult> GetAuditLogsCount()
-        {
-            var result = await _service.GetAuditLogsCount();
+            var result = await _service.GetDashboardInformation();
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
             return Ok(result);
         }
 

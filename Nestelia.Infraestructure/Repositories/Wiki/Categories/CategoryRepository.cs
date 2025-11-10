@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Nestelia.Domain.Common.ViewModels.Category;
 using Nestelia.Domain.Entities.Wiki.Categories;
 using Nestelia.Infraestructure.Common;
 using Nestelia.Infraestructure.Interfaces.Wiki.Categories;
@@ -12,16 +13,29 @@ namespace Nestelia.Infraestructure.Repositories.Wiki.Categories
     {
         private readonly ApplicationDbContext _context = context;
 
-        public async Task<List<Category>> GetListCategories()
+        public async Task<List<CategoryListVM>> GetListCategories()
         {
-            string sql = @"
-                SELECT c.*
-                FROM Categories c
-                ORDER BY c.DisplayName ASC";
+            var sql = @"
+                SELECT 
+                    c.Id,
+                    c.Name,
+                    c.DisplayName,
+                    c.Description,
+                    c.Icon,
+                    COUNT(a.Id) AS EntriesCount
+                FROM 
+                    Categories c
+                LEFT JOIN 
+                    WikiEntries a ON c.Id = a.CategoryId
+                WHERE c.IsDeleted = 0
+                GROUP BY 
+                    c.Id, c.Name, c.DisplayName, c.Description, c.Icon
+                ORDER BY 
+                    c.DisplayName;";
 
-            var categories = await _context.Database.GetDbConnection().QueryAsync<Category>(sql);
-
-            return categories.ToList();
+            var connection = _context.Database.GetDbConnection();
+            var categories = await connection.QueryAsync<CategoryListVM>(sql);
+            return [.. categories];
 
         }
     }

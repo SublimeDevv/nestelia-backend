@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Nestelia.Domain.Common.ViewModels.Bot;
 using Nestelia.Domain.DTO.Bot;
@@ -48,9 +49,24 @@ namespace Nestelia.Infraestructure.Repositories.Bot
 
         public async Task<BotConfigurationVM?> GetModelName()
         {
-            string sql = @"SELECT ""Value"" AS ModelName FROM ""BotConfigurations"" WHERE ""Key"" = @Key";
-            var result = await _context.Database.GetDbConnection().QueryFirstOrDefaultAsync<BotConfigurationVM>(sql, new { Key = "ModelName" });
-            return result;
+            const string sql = @"
+            SELECT [Key], [Value]
+            FROM BotConfigurations
+            WHERE [Key] IN ('ModelName', 'ApiKey')";
+
+            var results = await _context.Database.GetDbConnection().QueryAsync<BotDto>(sql);
+
+            var modelName = results.FirstOrDefault(x => x.Key == "ModelName")?.Value;
+            var apiKey = results.FirstOrDefault(x => x.Key == "ApiKey")?.Value;
+
+            if (modelName == null || apiKey == null)
+                return null;
+
+            return new BotConfigurationVM
+            {
+                ModelName = modelName,
+                ApiKey = apiKey
+            };
         }
 
         public async Task<bool> CreateModelName(BotDto botDto)

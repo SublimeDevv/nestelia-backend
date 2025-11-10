@@ -25,9 +25,34 @@ namespace Nestelia.WebAPI.Controllers.Wiki.Entries
             return Ok(result);
         }
 
-        [OutputCache(PolicyName = "EntityVaryByQuery")]
+        [HttpPut("update-wiki-entry/{id}")]
+        public async Task<IActionResult> UpdateWikiEntry(Guid id, UpdateWikiEntryDto wikiEntry)
+        {
+            wikiEntry.Id = id;
+            var result = await _service.UpdateWikiEntry(wikiEntry);
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
+            await InvalidateCache();
+            return Ok(result);
+        }
+
+        [HttpGet("getById/{id}")]
+        public async Task<IActionResult> GetByIdAsync(string id)
+        {
+            var result = await _service.GetByIdEntry(id);
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+
         [HttpGet("get-entries-by-category")]
-        public async Task<IActionResult> GetEntriesByCategoryAsync([FromQuery] string category, [FromQuery] string param = "", [FromQuery] int page = 1, [FromQuery] int size = 10)
+        [OutputCache(PolicyName = "EntityVaryByQuery")]
+        public async Task<IActionResult> GetEntriesByCategoryAsync([FromQuery] string category = "", [FromQuery] string param = "", [FromQuery] int page = 1, [FromQuery] int size = 10)
         {
             var result = await _service.GetEntriesByCategoryAsync(category, param, page, size);
             if (!result.IsSuccess)

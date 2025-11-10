@@ -2,6 +2,7 @@
 using Nestelia.Application.Interfaces.Storage;
 using Nestelia.Application.Interfaces.Wiki.Categories;
 using Nestelia.Application.Services.Base;
+using Nestelia.Domain.Common.ViewModels.Category;
 using Nestelia.Domain.DTO.Wiki.Categories;
 using Nestelia.Domain.Entities.Wiki.Categories;
 using Nestelia.Domain.Shared;
@@ -50,7 +51,7 @@ namespace Nestelia.Application.Services.Wiki.Categories
 
         }
 
-        public async Task<Result<bool>> UpdateCategory(CreateCategoryDto category)
+        public async Task<Result<bool>> UpdateCategory(UpdateCategoryDto category)
         {
 
             var existingCategory = await _repository.GetSingleAsync(c => c.Id == category.Id);
@@ -84,7 +85,27 @@ namespace Nestelia.Application.Services.Wiki.Categories
 
         }
 
-        public async Task<Result<List<Category>>> GetListCategories()
+        public async Task<Result> GetById(Guid id)
+        {
+            var categoryEntry = await _repository.GetSingleAsync(n => n.Id == id);
+            if (categoryEntry is null)
+            {
+                return Result.Failure("Categoría no encontrada.");
+            }
+            if (!string.IsNullOrEmpty(categoryEntry.Icon))
+            {
+                var urlResult = await _storageService.GetUrlFile(categoryEntry.Icon);
+                if (urlResult.IsSuccess && urlResult.Data is not null)
+                {
+                    categoryEntry.Icon = urlResult.Data;
+                }
+            }
+            return Result.Success(categoryEntry, "Categoría obtenida correctamente.");
+
+
+        }
+
+        public async Task<Result<List<CategoryListVM>>> GetListCategories()
         {
 
             var categories = await _repository.GetListCategories();

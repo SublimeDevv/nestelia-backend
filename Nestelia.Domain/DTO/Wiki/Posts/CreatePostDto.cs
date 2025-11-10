@@ -1,9 +1,12 @@
-﻿namespace Nestelia.Domain.DTO.Wiki.Posts
+﻿using Microsoft.AspNetCore.Http;
+
+namespace Nestelia.Domain.DTO.Wiki.Posts
 {
-    public class PostDto: BaseDto
+    public class CreatePostDto
     {
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public IFormFile? Image { get; set; }
         public string Content { get; set; } = string.Empty;
     }
 }

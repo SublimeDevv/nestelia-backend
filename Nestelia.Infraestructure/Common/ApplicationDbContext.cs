@@ -20,6 +20,7 @@ namespace Nestelia.Infraestructure.Common
         public DbSet<WikiEntry> WikiEntries { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<New> News { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -31,6 +32,7 @@ namespace Nestelia.Infraestructure.Common
             modelBuilder.Entity<WikiEntry>().HasQueryFilter(x => !x.IsDeleted);
             modelBuilder.Entity<Post>().HasQueryFilter(x => !x.IsDeleted);
             modelBuilder.Entity<Comment>().HasQueryFilter(x => !x.IsDeleted);
+            modelBuilder.Entity<New>().HasQueryFilter(x => !x.IsDeleted);
 
             var entitiesAssembly = typeof(BaseEntity).Assembly;
             modelBuilder.RegisterAllEntities<BaseEntity>(entitiesAssembly);

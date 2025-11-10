@@ -12,8 +12,8 @@ using Nestelia.Infraestructure.Common;
 namespace Nestelia.Infraestructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251107182959_Chanches")]
-    partial class Chanches
+    [Migration("20251109084343_First-Migration")]
+    partial class FirstMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -480,9 +480,8 @@ namespace Nestelia.Infraestructure.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnOrder(0);
 
-                    b.Property<string>("Author")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("AuthorId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -510,6 +509,8 @@ namespace Nestelia.Infraestructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
 
                     b.ToTable("News");
                 });
@@ -628,6 +629,15 @@ namespace Nestelia.Infraestructure.Migrations
                     b.Navigation("Post");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Nestelia.Domain.Entities.Wiki.Posts.New", b =>
+                {
+                    b.HasOne("Nestelia.Domain.Entities.ApplicationUser", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId");
+
+                    b.Navigation("Author");
                 });
 #pragma warning restore 612, 618
         }

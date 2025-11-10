@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Nestelia.Application.Interfaces.Auth;
 using Nestelia.Domain.Common.ViewModels.Util;
@@ -21,7 +20,7 @@ namespace Nestelia.WebAPI.Controllers.Auth
 
             if (userCreated.Data is null) return BadRequest();
 
-            authService.SetTokensInsideCookie(await authService.CreateTokens(userCreated.Data), HttpContext);
+            authService.SetTokensInsideCookie(await authService.CreateTokens(userCreated.Data));
 
             var getUserResult = await authService.GetUserById(userCreated.Data.Id);
 
@@ -32,11 +31,11 @@ namespace Nestelia.WebAPI.Controllers.Auth
         public async Task<IActionResult> Login(LoginDto LoginDto)
         {
             var validateUser = await authService.ValidateUser(LoginDto);
-            if (!validateUser.IsSuccess) return Unauthorized(validateUser);
+            if (!validateUser.IsSuccess) return BadRequest(validateUser);
 
             if (validateUser.Data is null) return BadRequest();
 
-            authService.SetTokensInsideCookie(await authService.CreateTokens(validateUser.Data), HttpContext);
+            authService.SetTokensInsideCookie(await authService.CreateTokens(validateUser.Data));
 
             var getUserResult = await authService.GetUserById(validateUser.Data.Id);
 
@@ -62,7 +61,7 @@ namespace Nestelia.WebAPI.Controllers.Auth
 
             if (responseRefresh.Data is null) return BadRequest();
 
-            authService.SetTokensInsideCookie(responseRefresh.Data, HttpContext);
+            authService.SetTokensInsideCookie(responseRefresh.Data);
 
             return Ok(responseRefresh);
         }
@@ -77,22 +76,20 @@ namespace Nestelia.WebAPI.Controllers.Auth
                 return BadRequest("Error: No se encontró el token de refresco.");
             }
 
-            Response.Cookies.Delete("accessToken");
-            Response.Cookies.Delete("refreshToken");
+            authService.RemoveTokensFromCookies();
 
             return Ok(response);
         }
 
         [HttpGet("me")]
-        [Authorize]
-        [OutputCache(Duration = 3600, VaryByHeaderNames = new[] { "Authorization" })]
+        [OutputCache(NoStore = true)]
         public async Task<IActionResult> GetCurrentUser()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userId))
             {
-                return BadRequest("No se pudo obtener el identificador del usuario.");
+                return Ok("No se pudo obtener el identificador del usuario.");
             }
 
             var userResult = await authService.GetUserById(userId);

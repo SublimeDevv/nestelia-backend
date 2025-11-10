@@ -9,5 +9,7 @@ namespace Nestelia.Application.Interfaces.Wiki.Entries
     {
         Task<Result<bool>> CreateWikiEntry(CreateWikiEntryDto createWikiEntryDto);
         Task<Result> GetEntriesByCategoryAsync(string category, string param, int page = 1, int size = 10);
+        Task<Result> GetByIdEntry(string id);
+        Task<Result<bool>> UpdateWikiEntry(UpdateWikiEntryDto updateWikiEntryDto);
     }
 }

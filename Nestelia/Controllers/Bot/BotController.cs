@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Nestelia.Application.Interfaces.Bot;
 using Nestelia.Domain.DTO.Bot;
 using Nestelia.Domain.Entities.Bot;
@@ -295,7 +296,9 @@ namespace Nestelia.WebAPI.Controllers.Bot
             return Ok(result);
         }
 
+
         [HttpGet("getModelName")]
+        [OutputCache(NoStore = true)]
         public async Task<IActionResult> GetModelName()
         {
             var result = await _botService.GetModelName();

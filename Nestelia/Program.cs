@@ -12,16 +12,20 @@ builder.Services.AddApplication(builder.Configuration);
 
 var app = builder.Build();
 
+app.UseCors("AllowedOriginsSite");
+
 app.UseWebSockets();
 
 app.UseSwagger();
 app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "Nestelia API v1"));
 
-app.UseHttpsRedirection();
-
 app.UseOutputCache();
 
-app.UseCors("AllowAll");
+if (app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 

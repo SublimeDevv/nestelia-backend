@@ -56,12 +56,60 @@ namespace Nestelia.Application.Services.Wiki.Entries
             return Result.Success(true, "Entrada wiki creada exitosamente.");
         }
 
+        public async Task<Result<bool>> UpdateWikiEntry(UpdateWikiEntryDto updateWikiEntryDto)
+        {
+            var existingEntry = await _wikiEntryRepository.GetSingleAsync(e => e.Id == updateWikiEntryDto.Id);
+            if (existingEntry is null)
+            {
+                return Result.Failure<bool>("Entrada wiki no encontrada.");
+            }
+            if (updateWikiEntryDto.Image is not null && updateWikiEntryDto.Image.Length > 0)
+            {
+                var category = await _categoryRepository.GetSingleAsync(c => c.Id == existingEntry.CategoryId);
+                if (category is null)
+                {
+                    return Result.Failure<bool>("Categoría asociada no encontrada.");
+                }
+                var uploadResult = await _storageService.UploadFileAsync(category.Name, updateWikiEntryDto.Image);
+                if (!uploadResult.IsSuccess)
+                {
+                    return Result.Failure<bool>($"Error al subir la imagen: {uploadResult.Error.Message}");
+                }
+                existingEntry.Image = uploadResult.Data!;
+            }
+            existingEntry.Title = updateWikiEntryDto.Title;
+            existingEntry.Description = updateWikiEntryDto.Description;
+            var resultUpdate = await _wikiEntryRepository.UpdateAsync(existingEntry);
+            if (resultUpdate == 0)
+            {
+                return Result.Failure<bool>("Error al actualizar la entrada wiki en la base de datos.");
+            }
+            return Result.Success(true, "Entrada wiki actualizada exitosamente.");
+        }
+
+        public async Task<Result> GetByIdEntry(string id)
+        {
+            var entry = await _wikiEntryRepository.GetSingleAsync(e => e.Id.ToString() == id);
+            if (entry is null)
+            {
+                return Result.Failure("Entrada wiki no encontrada.");
+            }
+
+            if (!string.IsNullOrEmpty(entry.Image))
+            {
+                var urlResult = await _storageService.GetUrlFile(entry.Image);
+                if (urlResult.IsSuccess && urlResult.Data is not null)
+                {
+                    entry.Image = urlResult.Data;
+                }
+            }
+
+            return Result.Success(entry, "Entrada wiki obtenida correctamente.");
+
+        }
+
         public async Task<Result> GetEntriesByCategoryAsync(string category, string param, int page = 1, int size = 10)
         {
-            if (string.IsNullOrWhiteSpace(category))
-            {
-                return Result.Failure("El parámetro de categoría no puede estar vacío.");
-            }
 
             page = Math.Max(1, page);
             size = Math.Clamp(size, 1, 100);

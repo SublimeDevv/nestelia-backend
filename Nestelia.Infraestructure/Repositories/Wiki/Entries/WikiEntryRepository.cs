@@ -14,15 +14,12 @@ namespace Nestelia.Infraestructure.Repositories.Wiki.Entries
 
         public async Task<PagedResult<WikiEntry>> GetEntriesByCategory(string category, string param, int page, int pageSize)
         {
-            var isGuid = Guid.TryParse(category, out var categoryId);
+            var query = _context.WikiEntries.Include(w => w.Category).AsQueryable();
 
-            var query = _context.Set<WikiEntry>()
-                .Include(w => w.Category)
-                .Where(w => w.Category.Name == category || (isGuid && w.CategoryId == categoryId));
-
-            if (typeof(WikiEntry).GetProperty("IsDeleted") != null)
+            if (!string.IsNullOrWhiteSpace(category))
             {
-                query = query.Where(e => EF.Property<bool>(e, "IsDeleted") == false);
+                var isGuid = Guid.TryParse(category, out var categoryId);
+                query = query.Where(w => w.Category.Name == category || (isGuid && w.CategoryId == categoryId));
             }
 
             if (!string.IsNullOrWhiteSpace(param))
@@ -32,7 +29,6 @@ namespace Nestelia.Infraestructure.Repositories.Wiki.Entries
 
             var totalCount = await query.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
             var data = await query
                 .OrderByDescending(w => w.CreatedAt)
                 .Skip((page - 1) * pageSize)

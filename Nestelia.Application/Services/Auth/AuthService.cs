@@ -9,14 +9,15 @@ using Nestelia.Infraestructure.Interfaces.Auth;
 
 namespace Nestelia.Application.Services.Auth
 {
-    public class AuthService(IAuthRepository authRepository, ITokenRepository tokenRepository, RoleManager<IdentityRole> roleManager,
+    public class AuthService(IHttpContextAccessor httpContextAccessor, IAuthRepository authRepository, ITokenRepository tokenRepository, RoleManager<IdentityRole> roleManager,
         UserManager<ApplicationUser> userManager) :  IAuthService
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
         private readonly IAuthRepository _authRepository = authRepository;
         private readonly ITokenRepository _tokenRepository = tokenRepository;
-
+        private readonly HttpContext context = httpContextAccessor.HttpContext!;
+        
         public async Task<Result<ApplicationUser>> CreateAccount(UserDto UserDto)
         {
 
@@ -114,25 +115,78 @@ namespace Nestelia.Application.Services.Auth
             }
         }
 
-        public void SetTokensInsideCookie(TokenResponse tokenResponse, HttpContext context)
+        public string GetIdentity()
         {
-            context.Response.Cookies.Append("accessToken", tokenResponse.AccessToken ?? string.Empty, new CookieOptions
+            var claim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(claim)) return string.Empty;
+            return claim;
+        }
+
+        public void SetTokensInsideCookie(TokenResponse tokenResponse)
+        {
+
+            CookieOptions cookieOptions = GetCookiesOptions();
+
+            context.Response.Cookies.Append("accessToken", tokenResponse.AccessToken ?? string.Empty,
+                new CookieOptions
+                {
+                    HttpOnly = cookieOptions.HttpOnly,
+                    Expires = DateTime.UtcNow.AddDays(5), // pa pruiebas, cambiar luego a minutos
+                    SameSite = cookieOptions.SameSite,
+                    Secure = cookieOptions.Secure,
+                    IsEssential = cookieOptions.IsEssential
+                });
+
+            context.Response.Cookies.Append("refreshToken", tokenResponse.RefreshToken ?? string.Empty,
+                new CookieOptions
+                {
+                    HttpOnly = cookieOptions.HttpOnly,
+                    Expires = DateTime.UtcNow.AddDays(7),
+                    SameSite = cookieOptions.SameSite,
+                    Secure = cookieOptions.Secure,
+                    IsEssential = cookieOptions.IsEssential
+                });
+        }
+
+        public void RemoveTokensFromCookies()
+        {
+            var cookieOptions = GetCookiesOptions();
+
+            context.Response.Cookies.Delete("accessToken", new CookieOptions
             {
-                HttpOnly = true,
-                Expires = DateTime.UtcNow.AddMinutes(5),
-                SameSite = SameSiteMode.Strict,
-                Secure = true,
-                IsEssential = true
+                HttpOnly = cookieOptions.HttpOnly,
+                SameSite = cookieOptions.SameSite,
+                Secure = cookieOptions.Secure,
+                IsEssential = cookieOptions.IsEssential,
+                Path = cookieOptions.Path,
+                Domain = cookieOptions.Domain
             });
 
-            context.Response.Cookies.Append("refreshToken", tokenResponse.RefreshToken ?? string.Empty, new CookieOptions
+            context.Response.Cookies.Delete("refreshToken", new CookieOptions
+            {
+                HttpOnly = cookieOptions.HttpOnly,
+                SameSite = cookieOptions.SameSite,
+                Secure = cookieOptions.Secure,
+                IsEssential = cookieOptions.IsEssential,
+                Path = cookieOptions.Path,
+                Domain = cookieOptions.Domain
+            });
+        }
+
+        private CookieOptions GetCookiesOptions()
+        {
+            var isProduction = context.Request.IsHttps;
+
+            var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Expires = DateTime.UtcNow.AddDays(7),
-                SameSite = SameSiteMode.Strict,
-                Secure = true,
-                IsEssential = true
-            });
+                Secure = isProduction,
+                SameSite = isProduction ? SameSiteMode.None : SameSiteMode.Lax,
+                IsEssential = true,
+            };
+
+            return cookieOptions;
+
         }
 
     }

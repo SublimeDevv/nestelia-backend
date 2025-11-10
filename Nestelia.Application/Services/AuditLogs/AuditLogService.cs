@@ -4,113 +4,22 @@ using Nestelia.Application.Services.Base;
 using Nestelia.Domain.Common.ViewModels.Util;
 using Nestelia.Domain.DTO.AuditLogs;
 using Nestelia.Domain.Entities.Audit;
+using Nestelia.Domain.Shared;
 using Nestelia.Infraestructure.Interfaces.AuditLogs;
 
 
 namespace Nestelia.Application.Services.AuditLogs
 {
-    public class AuditLogService: ServiceBase<AuditLog, AuditLogDto>, IAuditLogService
+    public class AuditLogService(IAuditLogRepository repository, IMapper mapper) : ServiceBase<AuditLog, AuditLogDto>(mapper, repository), IAuditLogService
     {
+        private readonly IAuditLogRepository _repository = repository;
 
-        private readonly IMapper _mapper;
-        private readonly IAuditLogRepository _repository;
 
-        public AuditLogService(IAuditLogRepository repository, IMapper mapper) : base(mapper, repository)
+        public async Task<Result> GetDashboardInformation()
         {
-            _repository = repository;
-            _mapper = mapper;
+            var result = await _repository.GetDashboardInformation();
+            return Result.Success(result);
         }
 
-        public async Task<ResponseHelper> GetAuditLogs(int? level, int? httpMethod, int offset, int pageSize)
-        {
-
-
-            ResponseHelper response = new();
-
-            try
-            {
-                var data = await _repository.GetAuditLogs(level, httpMethod, offset, pageSize);
-
-                if (data.Count == 0)
-                {
-                    response.Success = false;
-                    response.Message = "No hay datos que mostrar.";
-                    return response;
-                }
-
-                response.Message = "Datos obtenidos correctamente.";
-                response.Success = true;
-                response.Data = data;
-            }
-            catch (Exception e)
-            {
-                response.Success = false;
-                response.Message = e.Message;
-            }
-
-            return response;
-        }
-
-        public async Task<ResponseHelper> GetCountLogs(int level, int httpMethod)
-        {
-            ResponseHelper response = new();
-            try
-            {
-                var data = await _repository.GetCountLogs(level, httpMethod);
-                response.Success = true;
-                response.Message = "Datos obtenidos correctamente.";
-                response.Data = data;
-            }
-            catch (Exception e)
-            {
-                response.Success = false;
-                response.Message = e.Message;
-            }
-            return response;
-        }
-
-        public async Task<ResponseHelper> GetAuditEntities()
-        {
-            ResponseHelper response = new();
-            try
-            {
-                var data = await _repository.GetAuditEntities();
-
-                if (data.Count == 0)
-                {
-                    response.Success = false;
-                    response.Message = "No hay datos que mostrar.";
-                    return response;
-                }
-
-                response.Success = true;
-                response.Message = "Datos obtenidos correctamente.";
-                response.Data = data;
-            }
-            catch (Exception e)
-            {
-                response.Success = false;
-                response.Message = e.Message;
-            }
-            return response;
-        }
-
-        public async Task<ResponseHelper> GetAuditLogsCount()
-        {
-            ResponseHelper response = new();
-            try
-            {
-                var data = await _repository.GetAuditLogsCount();
-                response.Success = true;
-                response.Message = "Datos obtenidos correctamente.";
-                response.Data = data;
-            }
-            catch (Exception e)
-            {
-                response.Success = false;
-                response.Message = e.Message;
-            }
-            return response;
-        }
     }
 }

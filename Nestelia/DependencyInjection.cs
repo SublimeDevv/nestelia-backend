@@ -27,14 +27,16 @@ namespace Nestelia.WebAPI
             services.AddSingleton(mapper);
 
             services.AddRouting(options => options.LowercaseUrls = true);
+
+            var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? ["http://localhost:3000"];
+
             services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll", policy =>
+                options.AddPolicy("AllowedOriginsSite", policy =>
                 {
-                    policy.SetIsOriginAllowed(origin => true) 
+                    policy.WithOrigins(allowedOrigins) 
                           .AllowAnyHeader()
                           .AllowAnyMethod()
-                          .WithExposedHeaders("Content-Type", "Cache-Control", "Connection")
                           .AllowCredentials();
                 });
             });

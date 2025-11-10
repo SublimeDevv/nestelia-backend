@@ -80,12 +80,12 @@ public static class DependencyInjection
 
         services.AddOutputCache(options =>
         {
-            options.AddBasePolicy(builder => builder.Expire(TimeSpan.FromMinutes(10)));
+            options.AddBasePolicy(builder => builder.Expire(TimeSpan.FromMinutes(10)).Tag("entity"));
 
             options.AddPolicy("Expire30", builder => builder.Expire(TimeSpan.FromMinutes(30)));
             options.AddPolicy("Expire1Hour", builder => builder.Expire(TimeSpan.FromHours(1)));
             options.AddPolicy("EntityCache", builder => builder.Expire(TimeSpan.FromHours(1)).Tag("entity"));
-            options.AddPolicy("EntityVaryByQuery", builder => builder.SetVaryByQuery("page", "size", "param").Expire(TimeSpan.FromHours(1)).Tag("entity"));
+            options.AddPolicy("EntityVaryByQuery", builder => builder.SetVaryByQuery("category", "page", "size", "param").Expire(TimeSpan.FromHours(1)).Tag("entity"));
         });
 
         services.AddStackExchangeRedisCache(options =>
