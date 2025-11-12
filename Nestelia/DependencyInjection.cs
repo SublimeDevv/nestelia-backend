@@ -28,7 +28,7 @@ namespace Nestelia.WebAPI
 
             services.AddRouting(options => options.LowercaseUrls = true);
 
-            var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? ["https://nestelia.sublimedev.com.mx"];
+            var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? ["https://nestelia.sublimedev.com.mx", "http://localhost:3000"];
 
             services.AddCors(options =>
             {
