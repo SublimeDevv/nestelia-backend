@@ -22,6 +22,7 @@ namespace Nestelia.Infraestructure.Repositories.Wiki.Categories
                     c.DisplayName,
                     c.Description,
                     c.Icon,
+                    c.CreatedAt,
                     COUNT(a.Id) AS EntriesCount
                 FROM 
                     Categories c
@@ -29,7 +30,7 @@ namespace Nestelia.Infraestructure.Repositories.Wiki.Categories
                     WikiEntries a ON c.Id = a.CategoryId
                 WHERE c.IsDeleted = 0
                 GROUP BY 
-                    c.Id, c.Name, c.DisplayName, c.Description, c.Icon
+                    c.Id, c.Name, c.DisplayName, c.Description, c.Icon, c.CreatedAt
                 ORDER BY 
                     c.DisplayName;";
 
