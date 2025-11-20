@@ -80,9 +80,9 @@ namespace Nestelia.Application.Services.Wiki.Posts
             return Result.Success(true, "Noticia actualizada exitosamente.");
         }
 
-        public async Task<Result> GetNewById(string id)
+        public async Task<Result> GetNewById(Guid id)
         {
-            var newsEntry = await _repository.GetSingleAsync(n => n.Id.ToString() == id);
+            var newsEntry = await _repository.GetNewByid(id);
             if (newsEntry is null)
             {
                 return Result.Failure("Noticia no encontrada.");

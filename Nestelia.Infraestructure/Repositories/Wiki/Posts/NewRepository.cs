@@ -56,5 +56,27 @@ namespace Nestelia.Infraestructure.Repositories.Wiki.Posts
             };
         }
 
+        public async Task<NewVM> GetNewByid(Guid id)
+        {
+            var news = await _context.News
+                .Include(n => n.Author)
+                .FirstOrDefaultAsync(n => n.Id == id);
+            if (news == null)
+            {
+                return null!;
+            }
+            return new NewVM
+            {
+                Id = news.Id.ToString(),
+                Title = news.Title,
+                Description = news.Description,
+                PublishedAt = news.PublishedAt,
+                Content = news.Content,
+                AuthorName = news.Author != null ? news.Author.UserName! : "Autor desconocido",
+                CoverImageUrl = news.CoverImageUrl
+            };
+
+        }
+
     }
 }

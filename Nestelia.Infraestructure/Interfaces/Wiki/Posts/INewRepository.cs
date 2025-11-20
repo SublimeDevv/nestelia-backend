@@ -8,5 +8,6 @@ namespace Nestelia.Infraestructure.Interfaces.Wiki.Posts
     public interface INewRepository: IBaseRepository<New>
     {
         Task<PagedResult<NewsListVM>> GetNewsAsync(string param, int page, int pageSize);
+        Task<NewVM> GetNewByid(Guid id);
     }
 }

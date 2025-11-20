@@ -16,7 +16,11 @@ app.UseCors("AllowedOriginsSite");
 
 app.UseWebSockets();
 
-app.UseSwagger();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+}
+
 app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "Nestelia API v1"));
 
 app.UseOutputCache();

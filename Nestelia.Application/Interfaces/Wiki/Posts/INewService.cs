@@ -10,6 +10,6 @@ namespace Nestelia.Application.Interfaces.Wiki.Posts
         Task<Result<bool>> CreateNewPost(CreateNewDto newDto);
         Task<Result<bool>> UpdateNewPost(UpdateNewPost newDto);
         Task<Result> GetNewsAsync(string param = "", int page = 1, int size = 10);
-        Task<Result> GetNewById(string id);
+        Task<Result> GetNewById(Guid id);
     }
 }

@@ -46,7 +46,7 @@ namespace Nestelia.WebAPI.Controllers.Wiki.Posts
 
         [HttpGet("getById/{id}")]
         [OutputCache(PolicyName = "EntityCache")]
-        public async Task<IActionResult> GetByIdAsync(string id)
+        public async Task<IActionResult> GetByIdAsync(Guid id)
             {
             var result = await _service.GetNewById(id);
             if (!result.IsSuccess)
