@@ -146,7 +146,6 @@ namespace Nestelia.WebAPI.Controllers.Bot
         }
 
         [HttpPost("query-stream")]
-        [Authorize]
         public async Task QueryStream([FromBody] QueryRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Question))
